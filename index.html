@@ -1,0 +1,1239 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Peta Relasi dan Riwayat Hukum Perdirjen DJPb</title>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.9/standalone/umd/vis-network.min.js"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ─── RESET & BASE ──────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      /* DJPb brand palette */
+      --djpb-navy:      #0A2647;
+      --djpb-blue:      #144272;
+      --djpb-mid:       #205295;
+      --djpb-accent:    #2C74B3;
+      --djpb-sky:       #4A9EDB;
+      --djpb-pale:      #D6E8F7;
+
+      /* Neutrals */
+      --bg-canvas:      #F0F4F8;
+      --bg-white:       #FFFFFF;
+      --bg-panel:       #FAFCFF;
+      --border:         #DDE5EE;
+      --border-strong:  #C2D1E0;
+      --text-primary:   #0D1B2A;
+      --text-secondary: #4A6177;
+      --text-muted:     #8FA3B4;
+
+      /* Relation colors */
+      --rel-revoke-all:  #E53E3E;
+      --rel-revoke-part: #DD6B20;
+      --rel-amend:       #D69E2E;
+      --rel-cite:        #3182CE;
+
+      /* Status */
+      --status-active:   #276749;
+      --status-active-bg:#C6F6D5;
+      --status-revoked:  #9B2C2C;
+      --status-revoked-bg:#FED7D7;
+
+      /* Type badge colors */
+      --type-uu:   #6B46C1;
+      --type-pp:   #2B6CB0;
+      --type-pmk:  #2C7A7B;
+      --type-pdj:  #276749;
+
+      --radius-sm: 4px;
+      --radius:    8px;
+      --radius-lg: 12px;
+      --shadow-sm: 0 1px 3px rgba(10,38,71,.08), 0 1px 2px rgba(10,38,71,.05);
+      --shadow:    0 4px 12px rgba(10,38,71,.10), 0 2px 4px rgba(10,38,71,.06);
+      --shadow-lg: 0 10px 32px rgba(10,38,71,.14), 0 4px 8px rgba(10,38,71,.08);
+
+      --header-h: 60px;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: var(--font-body);
+      background: var(--bg-canvas);
+      color: var(--text-primary);
+      font-size: 13px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ─── LAYOUT SHELL ──────────────────────────────────────────── */
+    .app-shell {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ─── HEADER ────────────────────────────────────────────────── */
+    .app-header {
+      height: var(--header-h);
+      background: linear-gradient(135deg, var(--djpb-navy) 0%, var(--djpb-blue) 60%, var(--djpb-mid) 100%);
+      display: flex;
+      align-items: center;
+      padding: 0 20px 0 16px;
+      gap: 16px;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 100;
+      box-shadow: 0 2px 16px rgba(10,38,71,.35);
+    }
+
+    .app-header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: repeating-linear-gradient(
+        -45deg,
+        transparent,
+        transparent 12px,
+        rgba(255,255,255,.025) 12px,
+        rgba(255,255,255,.025) 13px
+      );
+      pointer-events: none;
+    }
+
+    .header-logo-mark {
+      width: 36px;
+      height: 36px;
+      background: rgba(255,255,255,.12);
+      border: 1px solid rgba(255,255,255,.22);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 1;
+      overflow: hidden;
+    }
+
+    .header-titles {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      flex: 1;
+      position: relative;
+      z-index: 1;
+    }
+
+    .header-title {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: #FFFFFF;
+      letter-spacing: .01em;
+      line-height: 1.2;
+    }
+
+    .header-subtitle {
+      font-size: 10.5px;
+      font-weight: 400;
+      color: rgba(255,255,255,.55);
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    .header-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .header-badge {
+      background: rgba(255,255,255,.10);
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 20px;
+      padding: 3px 10px;
+      font-size: 10px;
+      font-weight: 600;
+      color: rgba(255,255,255,.75);
+      letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+
+    .header-badge.beta {
+      background: rgba(44,116,179,.5);
+      border-color: rgba(74,158,219,.5);
+      color: #A8D4F5;
+    }
+
+    .header-divider {
+      width: 1px;
+      height: 28px;
+      background: rgba(255,255,255,.15);
+      flex-shrink: 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    .header-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .toolbar-btn {
+      width: 32px;
+      height: 32px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background .15s, border-color .15s;
+      color: rgba(255,255,255,.7);
+    }
+
+    .toolbar-btn:hover {
+      background: rgba(255,255,255,.15);
+      border-color: rgba(255,255,255,.25);
+      color: #fff;
+    }
+
+    .toolbar-btn svg { width: 15px; height: 15px; }
+
+    /* ─── WORKSPACE ─────────────────────────────────────────────── */
+    .workspace {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ─── NETWORK MAP COLUMN ────────────────────────────────────── */
+    #network-map {
+      flex: 0 0 75%;
+      position: relative;
+      background: #EDF2F7;
+      background-image:
+        radial-gradient(circle at 20% 50%, rgba(44,116,179,.04) 0%, transparent 60%),
+        radial-gradient(circle at 80% 20%, rgba(10,38,71,.05) 0%, transparent 50%),
+        linear-gradient(90deg, rgba(193,210,226,.3) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(193,210,226,.3) 1px, transparent 1px);
+      background-size: auto, auto, 32px 32px, 32px 32px;
+      overflow: hidden;
+    }
+
+    #network-map::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(circle, rgba(100,140,180,.4) 1px, transparent 1px);
+      background-size: 32px 32px;
+      pointer-events: none;
+    }
+
+    .map-empty-state {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      pointer-events: none;
+    }
+
+    .map-empty-icon {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: rgba(44,116,179,.08);
+      border: 2px dashed rgba(44,116,179,.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .map-empty-icon svg {
+      width: 32px;
+      height: 32px;
+      color: rgba(44,116,179,.45);
+    }
+
+    .map-empty-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+      letter-spacing: .01em;
+    }
+
+    .map-empty-sub {
+      font-size: 11px;
+      color: rgba(143,163,180,.7);
+      margin-top: -10px;
+    }
+
+    /* ─── MAP TOOLBAR (float inside canvas) ─────────────────────── */
+    .map-toolbar {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      z-index: 10;
+    }
+
+    .map-toolbar-group {
+      display: flex;
+      background: var(--bg-white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+
+    .map-tool-btn {
+      width: 32px;
+      height: 32px;
+      background: transparent;
+      border: none;
+      border-right: 1px solid var(--border);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-secondary);
+      transition: background .12s, color .12s;
+    }
+
+    .map-tool-btn:last-child { border-right: none; }
+    .map-tool-btn:hover { background: var(--djpb-pale); color: var(--djpb-blue); }
+    .map-tool-btn.active { background: var(--djpb-mid); color: #fff; }
+    .map-tool-btn svg { width: 14px; height: 14px; }
+
+    .map-search-bar {
+      height: 32px;
+      display: flex;
+      align-items: center;
+      background: var(--bg-white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      padding: 0 10px;
+      gap: 6px;
+    }
+
+    .map-search-bar svg { width: 13px; height: 13px; color: var(--text-muted); flex-shrink: 0; }
+
+    .map-search-bar input {
+      border: none;
+      outline: none;
+      font-family: var(--font-body);
+      font-size: 12px;
+      color: var(--text-primary);
+      width: 180px;
+      background: transparent;
+    }
+
+    .map-search-bar input::placeholder { color: var(--text-muted); }
+
+    /* ─── LEGEND ────────────────────────────────────────────────── */
+    .legend {
+      position: absolute;
+      bottom: 16px;
+      left: 16px;
+      background: rgba(255,255,255,.88);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(200,215,228,.7);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      padding: 12px 14px;
+      min-width: 180px;
+      z-index: 10;
+    }
+
+    .legend-title {
+      font-size: 9.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .legend-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .legend-items { display: flex; flex-direction: column; gap: 7px; }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .legend-line {
+      width: 28px;
+      height: 3px;
+      border-radius: 2px;
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .legend-line::after {
+      content: '▶';
+      position: absolute;
+      right: -6px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 6px;
+      color: inherit;
+      line-height: 1;
+    }
+
+    .legend-line.revoke-all    { background: var(--rel-revoke-all);  color: var(--rel-revoke-all); }
+    .legend-line.revoke-part   { background: var(--rel-revoke-part); color: var(--rel-revoke-part); }
+    .legend-line.amend         { background: var(--rel-amend);       color: var(--rel-amend); }
+    .legend-line.cite          { background: var(--rel-cite);        color: var(--rel-cite); }
+
+    .legend-label {
+      font-size: 11.5px;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    /* ─── MAP STATUS BAR ─────────────────────────────────────────── */
+    .map-statusbar {
+      position: absolute;
+      bottom: 16px;
+      right: 16px;
+      display: flex;
+      gap: 6px;
+      z-index: 10;
+    }
+
+    .map-stat-chip {
+      background: rgba(255,255,255,.88);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(200,215,228,.7);
+      border-radius: var(--radius);
+      padding: 5px 10px;
+      font-size: 10.5px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .map-stat-chip span {
+      font-weight: 700;
+      color: var(--djpb-mid);
+    }
+
+    .map-stat-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--text-muted);
+    }
+
+    /* ─── DETAIL PANEL ──────────────────────────────────────────── */
+    #detail-panel {
+      flex: 0 0 25%;
+      background: var(--bg-white);
+      border-left: 1.5px solid var(--border-strong);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Panel header */
+    .panel-header {
+      padding: 14px 16px 12px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-panel);
+      flex-shrink: 0;
+    }
+
+    .panel-header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .panel-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: var(--djpb-blue);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .panel-title::before {
+      content: '';
+      display: block;
+      width: 3px;
+      height: 14px;
+      background: var(--djpb-accent);
+      border-radius: 2px;
+    }
+
+    .panel-close-btn {
+      width: 24px;
+      height: 24px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      transition: background .12s;
+    }
+
+    .panel-close-btn:hover { background: var(--bg-canvas); }
+    .panel-close-btn svg { width: 12px; height: 12px; }
+
+    /* Panel scrollable body */
+    .panel-body {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-y: auto !important;
+      overflow-x: hidden;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .panel-body::-webkit-scrollbar { width: 4px; }
+    .panel-body::-webkit-scrollbar-track { background: transparent; }
+    .panel-body::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
+
+    /* ── Card within detail panel ── */
+    .detail-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .detail-card-header {
+      background: var(--bg-canvas);
+      padding: 8px 12px;
+      font-size: 9.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .detail-card-body {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 250px;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .detail-card-body::-webkit-scrollbar { width: 4px; }
+    .detail-card-body::-webkit-scrollbar-track { background: transparent; }
+    .detail-card-body::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
+
+    /* Type badge */
+    .type-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    .type-badge.perdirjen {
+      background: #DCFCE7;
+      color: var(--type-pdj);
+      border: 1px solid #BBF7D0;
+    }
+
+    .type-badge.pmk {
+      background: #DBEAFE;
+      color: #1D4ED8;
+      border: 1px solid #BFDBFE;
+    }
+
+    .type-badge.uu {
+      background: #EDE9FE;
+      color: var(--type-uu);
+      border: 1px solid #DDD6FE;
+    }
+
+    /* Status pill */
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 9px;
+      border-radius: 20px;
+      font-size: 10.5px;
+      font-weight: 600;
+    }
+
+    .status-pill .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    .status-pill.active {
+      background: var(--status-active-bg);
+      color: var(--status-active);
+    }
+
+    .status-pill.active .dot { background: var(--status-active); }
+
+    .status-pill.revoked {
+      background: var(--status-revoked-bg);
+      color: var(--status-revoked);
+    }
+
+    .status-pill.revoked .dot { background: var(--status-revoked); }
+
+    /* Data rows */
+    .data-row {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .data-label {
+      font-size: 9.5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--text-muted);
+    }
+
+    .data-value {
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--text-primary);
+      line-height: 1.4;
+      white-space: normal;
+      word-wrap: break-word;
+      overflow-wrap: anywhere;
+    }
+
+    .data-value.mono {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      color: var(--djpb-mid);
+      background: var(--djpb-pale);
+      padding: 3px 7px;
+      border-radius: var(--radius-sm);
+      display: inline-block;
+    }
+
+    .data-value.judul {
+      font-size: 12px;
+      line-height: 1.55;
+      color: var(--text-secondary);
+      white-space: normal;
+      word-wrap: break-word;
+      overflow-wrap: anywhere;
+    }
+
+    .data-row-inline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* ── Divider ── */
+    .section-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 0 -16px;
+    }
+
+    /* ── Relasi quick chips ── */
+    .relasi-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .relasi-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      border: 1px solid;
+      white-space: normal;
+      word-wrap: break-word;
+      overflow-wrap: anywhere;
+    }
+
+    .relasi-chip .chip-dot { width: 5px; height: 5px; border-radius: 50%; }
+
+    .relasi-chip.cite   { background: #EFF6FF; color: #1D4ED8; border-color: #BFDBFE; }
+    .relasi-chip.cite .chip-dot { background: var(--rel-cite); }
+
+    .relasi-chip.amend  { background: #FFFBEB; color: #92400E; border-color: #FDE68A; }
+    .relasi-chip.amend .chip-dot { background: var(--rel-amend); }
+
+    .relasi-chip.revoke { background: #FEF2F2; color: #991B1B; border-color: #FECACA; }
+    .relasi-chip.revoke .chip-dot { background: var(--rel-revoke-all); }
+
+    /* ─── RIWAYAT TABLE ─────────────────────────────────────────── */
+    .riwayat-section {
+      flex-shrink: 0;
+    }
+
+    .riwayat-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 0 8px;
+    }
+
+    .riwayat-title {
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--djpb-blue);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .riwayat-title::before {
+      content: '';
+      display: block;
+      width: 3px;
+      height: 12px;
+      background: var(--djpb-sky);
+      border-radius: 2px;
+    }
+
+    .riwayat-count {
+      background: var(--djpb-pale);
+      color: var(--djpb-mid);
+      font-size: 9.5px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 20px;
+    }
+
+    .riwayat-table-wrap {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      max-height: 250px;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .riwayat-table-wrap::-webkit-scrollbar { width: 4px; height: 4px; }
+    .riwayat-table-wrap::-webkit-scrollbar-track { background: transparent; }
+    .riwayat-table-wrap::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
+
+    .riwayat-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+    }
+
+    .riwayat-table thead {
+      background: var(--bg-canvas);
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    .riwayat-table th {
+      padding: 7px 10px;
+      text-align: left;
+      font-size: 9.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    .riwayat-table td {
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-secondary);
+      vertical-align: middle;
+    }
+
+    .riwayat-table tr:last-child td { border-bottom: none; }
+
+    .riwayat-table tr:hover td { background: var(--bg-canvas); }
+
+    .riwayat-empty {
+      text-align: center;
+      padding: 24px 0;
+    }
+
+    .riwayat-empty-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--bg-canvas);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 8px;
+    }
+
+    .riwayat-empty-icon svg { width: 16px; height: 16px; color: var(--text-muted); }
+
+    .riwayat-empty p {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* Relasi pill inside table */
+    .rel-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 7px;
+      border-radius: 3px;
+      font-size: 9.5px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .rel-pill .rel-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+
+    .rel-pill.r-revoke-all  { background: #FEF2F2; color: #991B1B; }
+    .rel-pill.r-revoke-all .rel-dot  { background: var(--rel-revoke-all); }
+    .rel-pill.r-revoke-part { background: #FFF7ED; color: #9A3412; }
+    .rel-pill.r-revoke-part .rel-dot { background: var(--rel-revoke-part); }
+    .rel-pill.r-amend       { background: #FFFBEB; color: #92400E; }
+    .rel-pill.r-amend .rel-dot       { background: var(--rel-amend); }
+    .rel-pill.r-cite        { background: #EFF6FF; color: #1D4ED8; }
+    .rel-pill.r-cite .rel-dot        { background: var(--rel-cite); }
+
+    /* ─── NODE CHIP ───────────────────────────────────────── */
+    .node-id {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      color: var(--djpb-mid);
+      background: var(--djpb-pale);
+      padding: 2px 6px;
+      border-radius: 3px;
+      white-space: normal;
+      word-wrap: break-word;
+      overflow-wrap: anywhere;
+      display: inline-block;
+    }
+
+    /* ─── PANEL FOOTER ───────────────────────────────────────────── */
+    .panel-footer {
+      border-top: 1px solid var(--border);
+      padding: 10px 16px;
+      background: var(--bg-panel);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .panel-footer-btn {
+      flex: 1;
+      height: 32px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--bg-white);
+      cursor: pointer;
+      font-family: var(--font-body);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      transition: background .12s, border-color .12s, color .12s;
+    }
+
+    .panel-footer-btn:hover {
+      background: var(--djpb-pale);
+      border-color: var(--djpb-sky);
+      color: var(--djpb-blue);
+    }
+
+    .panel-footer-btn svg { width: 13px; height: 13px; }
+
+    .panel-footer-btn.primary {
+      background: var(--djpb-mid);
+      border-color: var(--djpb-mid);
+      color: #fff;
+    }
+
+    .panel-footer-btn.primary:hover {
+      background: var(--djpb-blue);
+      border-color: var(--djpb-blue);
+    }
+
+    /* ─── SCROLLBAR GLOBAL ──────────────────────────────────────── */
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: var(--border-strong) transparent;
+    }
+
+    /* ─── RESPONSIVE ─────────────────────────────────────────────── */
+    @media (max-width: 900px) {
+      .workspace { flex-direction: column; }
+      #network-map { flex: 0 0 55%; }
+      #detail-panel { flex: 0 0 45%; border-left: none; border-top: 1.5px solid var(--border-strong); }
+    }
+
+    /* ─── FADE IN ANIMATION ─────────────────────────────────────── */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .legend, #detail-panel, .map-toolbar, .map-statusbar {
+      animation: fadeInUp .4s ease both;
+    }
+    .legend          { animation-delay: .15s; }
+    .map-statusbar   { animation-delay: .20s; }
+    #detail-panel    { animation-delay: .10s; }
+  </style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <header class="app-header">
+    <!-- POIN 1: Logo diganti menjadi <img> -->
+    <div class="header-logo-mark">
+      <img src="logo_DJPb.png" alt="Logo DJPb" style="width: 100%; height: 100%; object-fit: contain; border-radius: 4px;" />
+    </div>
+
+    <div class="header-titles">
+      <!-- POIN 2: Judul diperbarui -->
+      <div class="header-title">Peta Relasi dan Riwayat Hukum Perdirjen DJPb</div>
+      <div class="header-subtitle">Knowledge Management System — Direktorat Jenderal Perbendaharaan</div>
+    </div>
+
+    <div class="header-meta">
+      <div class="header-badge">DJPb</div>
+      <div class="header-badge beta">Beta v0.1</div>
+    </div>
+
+    <div class="header-divider"></div>
+
+    <!-- POIN 4: Tombol Ekspor dihapus dari header-toolbar -->
+    <div class="header-toolbar">
+      <button class="toolbar-btn" title="Muat Data">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M23 4v6h-6"/>
+          <path d="M1 20v-6h6"/>
+          <path d="M3.51 9a9 9 0 0 1 14.36-3.36L23 10M1 14l5.13 4.36A9 9 0 0 0 20.49 15"/>
+        </svg>
+      </button>
+
+      <button class="toolbar-btn" title="Filter">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+        </svg>
+      </button>
+
+      <button class="toolbar-btn" title="Pengaturan">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06
+                   a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09
+                   A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83
+                   l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09
+                   A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83
+                   l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09
+                   a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83
+                   l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09
+                   a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="workspace">
+
+    <div id="network-map">
+
+      <div class="map-toolbar">
+        <div class="map-toolbar-group">
+          <button class="map-tool-btn active" title="Pilih (S)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 3l14 9-7 1-3 7z"/>
+            </svg>
+          </button>
+          <button class="map-tool-btn" title="Zoom In (+)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              <line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/>
+            </svg>
+          </button>
+          <button class="map-tool-btn" title="Zoom Out (-)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              <line x1="8" y1="11" x2="14" y2="11"/>
+            </svg>
+          </button>
+          <button class="map-tool-btn" title="Fit ke Layar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/>
+              <line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="map-search-bar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input type="text" placeholder="Cari nomor atau judul peraturan…" />
+        </div>
+      </div>
+
+      <div class="map-empty-state">
+        <div class="map-empty-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="9" y1="15" x2="15" y2="15"/>
+            <line x1="9" y1="11" x2="15" y2="11"/>
+          </svg>
+        </div>
+        <div class="map-empty-label">Peta Jaringan Belum Dimuat</div>
+        <div class="map-empty-sub">Muat file <code>Tabel_Master.csv</code> dan <code>Tabel_Relasi.csv</code> untuk memulai</div>
+      </div>
+
+      <!-- POIN 3: Legenda tanpa legend-code -->
+      <div class="legend">
+        <div class="legend-title">Legenda Relasi</div>
+        <div class="legend-items">
+          <div class="legend-item">
+            <div class="legend-line cite"></div>
+            <div class="legend-label">Mengingat</div>
+          </div>
+          <div class="legend-item">
+            <div class="legend-line revoke-all"></div>
+            <div class="legend-label">Mencabut Seluruhnya</div>
+          </div>
+          <div class="legend-item">
+            <div class="legend-line revoke-part"></div>
+            <div class="legend-label">Mencabut Sebagian</div>
+          </div>
+          <div class="legend-item">
+            <div class="legend-line amend"></div>
+            <div class="legend-label">Mengubah</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="map-statusbar">
+        <div class="map-stat-chip">
+          <div class="map-stat-dot"></div>
+          Node: <span>—</span>
+        </div>
+        <div class="map-stat-chip">
+          Relasi: <span>—</span>
+        </div>
+        <div class="map-stat-chip">
+          Zoom: <span>100%</span>
+        </div>
+      </div>
+
+    </div><div id="detail-panel">
+
+      <div class="panel-header">
+        <div class="panel-header-top">
+          <div class="panel-title">Detail Peraturan</div>
+          <button class="panel-close-btn" title="Tutup panel">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="panel-body">
+
+        <div class="detail-card">
+          <div class="detail-card-header">Identitas Dokumen</div>
+          <div class="detail-card-body">
+
+            <div class="data-row-inline">
+              <div>
+                <div class="data-label" style="margin-bottom:4px;">Tipe Dokumen</div>
+                <span class="type-badge perdirjen" id="dp-type-badge">
+                  <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor"><circle cx="4" cy="4" r="4"/></svg>
+                  —
+                </span>
+              </div>
+              <div style="text-align:right;">
+                <div class="data-label" style="margin-bottom:4px;">Status</div>
+                <span class="status-pill active" id="dp-status-pill">
+                  <span class="dot"></span>
+                  —
+                </span>
+              </div>
+            </div>
+
+            <!-- POIN 5: Label "Kode Baku (Primary Key)" diubah menjadi "Peraturan" -->
+            <div class="data-row">
+              <div class="data-label">Peraturan</div>
+              <div class="data-value mono" id="dp-primary-key">—</div>
+            </div>
+
+            <div style="display:flex; gap:12px;">
+              <div class="data-row" style="flex:1;">
+                <div class="data-label">Nomor</div>
+                <div class="data-value" id="dp-nomor">—</div>
+              </div>
+              <div class="data-row" style="flex:1;">
+                <div class="data-label">Tahun</div>
+                <div class="data-value" id="dp-tahun">—</div>
+              </div>
+            </div>
+
+            <div class="data-row">
+              <div class="data-label">Tanggal Ditetapkan</div>
+              <div class="data-value" id="dp-tanggal">—</div>
+            </div>
+
+            <!-- POIN 8: 3 field baru: Tanggal Berlaku, Instansi Penerbit, Tempat Terbit -->
+            <div class="data-row">
+              <div class="data-label">Tanggal Berlaku</div>
+              <div class="data-value" id="dp-tgl-berlaku">—</div>
+            </div>
+
+            <div class="data-row">
+              <div class="data-label">Instansi Penerbit</div>
+              <div class="data-value" id="dp-instansi">—</div>
+            </div>
+
+            <div class="data-row">
+              <div class="data-label">Tempat Terbit</div>
+              <div class="data-value" id="dp-tempat">—</div>
+            </div>
+
+            <div class="data-row">
+              <div class="data-label">Judul Peraturan</div>
+              <div class="data-value judul" id="dp-judul">
+                Klik sebuah node untuk melihat detail peraturan.
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="detail-card">
+          <div class="detail-card-header">Relasi Terhubung</div>
+          <div class="detail-card-body">
+            <div class="data-label" style="margin-bottom:4px;">Dasar Hukum yang Diingat</div>
+            <div class="relasi-chips" id="dp-chips-dasar">
+              <span style="font-size:10px;color:var(--text-muted);">—</span>
+            </div>
+            <div class="data-label" style="margin-top:8px; margin-bottom:4px;">Peraturan yang Diubah / Dicabut</div>
+            <div class="relasi-chips" id="dp-chips-aksi">
+              <span style="font-size:10px;color:var(--text-muted);">—</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="riwayat-section">
+          <div class="riwayat-header">
+            <div class="riwayat-title">Riwayat Perubahan</div>
+            <span class="riwayat-count" id="dp-riwayat-count">0 entri</span>
+          </div>
+
+          <div class="riwayat-table-wrap">
+            <table class="riwayat-table">
+              <thead>
+                <tr>
+                  <th>No.</th>
+                  <th>Kode Peraturan</th>
+                  <th>Relasi</th>
+                  <th>Tahun</th>
+                </tr>
+              </thead>
+              <tbody id="dp-riwayat-tbody">
+                <tr><td colspan="4" style="text-align:center;padding:16px;color:var(--text-muted);font-size:11px;">Pilih node untuk melihat riwayat</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div><div class="panel-footer">
+        <!-- POIN 6: Ikon Fokus di Peta diubah ke kaca pembesar (search/magnifying glass) -->
+        <button class="panel-footer-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          Fokus di Peta
+        </button>
+        <!-- POIN 7: Teks "Ekspor Detail" → "Salin Detail Perdirjen", ikon → rantai (link) -->
+        <button class="panel-footer-btn primary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+          </svg>
+          Salin Detail Perdirjen
+        </button>
+      </div>
+
+    </div></div></div><script src="djpb-engine.js"></script>
+
+</body>
+</html>
