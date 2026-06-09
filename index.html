@@ -341,13 +341,14 @@
 
     .map-search-bar svg { width: 13px; height: 13px; color: var(--text-muted); flex-shrink: 0; }
 
+    /* 5.1: Input di dalam .search-input-wrapper mengisi lebar penuh */
     .map-search-bar input {
       border: none;
       outline: none;
       font-family: var(--font-body);
       font-size: 12px;
       color: var(--text-primary);
-      width: 180px;
+      width: 100%;
       background: transparent;
     }
 
@@ -948,6 +949,71 @@
     .map-statusbar   { animation-delay: .20s; }
     #detail-panel    { animation-delay: .10s; }
 
+    /* ─── ACTIVE FILTERS (Multi-Ego chips) ─────────────────────── */
+    .active-filters {
+      position: absolute;
+      top: 56px;
+      left: 14px;
+      z-index: 10;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      max-width: calc(100% - 28px);
+      pointer-events: none;
+    }
+
+    .active-filters:empty { display: none; }
+
+    .ego-filter-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 8px 3px 10px;
+      background: var(--djpb-mid);
+      color: #fff;
+      border-radius: 20px;
+      font-size: 10.5px;
+      font-weight: 600;
+      box-shadow: var(--shadow-sm);
+      pointer-events: all;
+      cursor: default;
+      max-width: 260px;
+      animation: fadeInUp .18s ease both;
+    }
+
+    .ego-filter-chip-label {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .ego-filter-chip-remove {
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 14px;
+      height: 14px;
+      background: rgba(255,255,255,.25);
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      color: #fff;
+      font-size: 9px;
+      line-height: 1;
+      padding: 0;
+      transition: background .12s;
+    }
+
+    .ego-filter-chip-remove:hover {
+      background: rgba(255,255,255,.45);
+    }
+
+    body.dark-mode .ego-filter-chip {
+      background: var(--djpb-accent);
+      box-shadow: 0 1px 4px rgba(0,0,0,.4);
+    }
+
     /* ═══════════════════════════════════════════════════════════════
        SETTINGS MODAL
        ═══════════════════════════════════════════════════════════════ */
@@ -1444,9 +1510,14 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
           </svg>
-          <input type="text" placeholder="Cari nomor atau judul peraturan…" />
+          <div class="search-input-wrapper">
+            <input id="search-input" type="text" placeholder="Memuat data…" disabled />
+            <div id="custom-search-dropdown" class="custom-dropdown"></div>
+          </div>
         </div>
       </div>
+
+      <div id="active-filters-container" class="active-filters"></div>
 
       <div class="map-empty-state">
         <div class="map-empty-icon">

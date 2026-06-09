@@ -1,28 +1,82 @@
 /**
  * ╔══════════════════════════════════════════════════════════════════════════╗
  * ║  MESIN JAVASCRIPT — Peta Relasi dan Riwayat Hukum Perdirjen DJPb       ║
- * ║  Versi : 4.0.0  (Settings Modal — Toggle Labels, Freeze, Dark Mode)    ║
+ * ║  Versi : 5.2.1  (Patch — Ghost Nodes & Cluster Optimization)          ║
  * ║  Tempel : Sebagai file djpb-engine.js, lalu panggil via <script src>   ║
  * ║           tepat sebelum </body> di index.html                           ║
  * ╚══════════════════════════════════════════════════════════════════════════╝
  *
- * ── FITUR BARU (v4.0.0) ───────────────────────────────────────────────────
- *  SETTINGS-1: Modal Pengaturan (#settings-modal) muncul saat tombol
- *              roda gigi di header diklik. Overlay menutup modal saat diklik.
+ * ── FITUR BARU (v5.2.0) ───────────────────────────────────────────────────
+ *  CLUSTER-1: Penandaan Node Leaf R-01.
+ *             Di renderAllEgos(), setiap node yang:
+ *               a) Terhubung ke ego aktif HANYA via relasi R-01 (ego → target), DAN
+ *               b) Merupakan Leaf Node (degree = 1 di dalam graf yang dirender)
+ *             akan ditandai dengan properti `isLeafR01: true` dan
+ *             `parentEgo: <id_ego>` sebelum dimasukkan ke nodesDS.
  *
- *  SETTINGS-2: Toggle "Sembunyikan Teks Garis" — iterasi edgesDS dan
- *              set font.size=0 / kembalikan ke ukuran asli berdasarkan
- *              EDGE_COLORS.
+ *  CLUSTER-2: Fungsi applyClustering().
+ *             Dipanggil tepat setelah fit() di dalam renderAllEgos().
+ *             Menggunakan State.networkInst.cluster({ ... }) per egoId.
+ *             Hanya membentuk kluster jika childNodes.length >= 3.
+ *             Label kluster: "+N Dasar Hukum\n(Klik Ganda Buka)"
+ *             Desain: shape:circle, warna biru #3182CE, font putih.
  *
- *  SETTINGS-3: Toggle "Bekukan Jaringan" — setOptions physics enabled
- *              true/false secara mulus.
+ *  CLUSTER-3: Event doubleClick diperbarui.
+ *             Jika node adalah kluster → openCluster() + applyActiveSettings().
+ *             Jika bukan kluster → renderEgoNetwork() seperti sebelumnya.
  *
- *  SETTINGS-4: Toggle "Dark Mode" — toggle class .dark-mode di <body>.
+ * ── PATCH (v5.2.1) ───────────────────────────────────────────────────────
+ *  PATCH-1: Buka Kluster Sebelum Clear (renderAllEgos, cabang re-render).
+ *           Sebelum State.nodesDS.clear(), semua kluster aktif dibuka terlebih
+ *           dahulu dengan iterasi via .slice() agar ghost nodes tidak tertinggal
+ *           di memori internal Vis.js setelah DataSet dikosongkan.
  *
- *  SETTINGS-5: Tombol "Kembalikan ke Pengaturan Awal" — reset semua toggle
- *              dan kembalikan state visual ke default.
+ *  PATCH-2: Pindah posisi applyClustering() di renderAllEgos().
+ *           Dari: di dalam callback stabilizationIterationsDone (async, setelah fit)
+ *           Ke  : tepat setelah State.edgesDS.add(edgesArray) (sync, sebelum fisika)
+ *           Kluster terbentuk sebelum fisika berjalan → layout lebih efisien.
  *
- * ── DAFTAR PERBAIKAN TERDAHULU (v3.4) ────────────────────────────────────
+ *  PATCH-3: Pindah posisi applyClustering() di initVisNetwork().
+ *           Dari: di dalam callback stabilizationIterationsDone
+ *           Ke  : tepat setelah new vis.Network(...) (sync)
+ *           Alasan sama dengan PATCH-2.
+ *
+ *  PATCH-4: Gunakan .slice() di dalam applyClustering() saat iterasi node untuk
+ *           openCluster kluster < 3 node, agar mutasi nodeIndices tidak merusak
+ *           iterasi yang sedang berjalan.
+ *
+ * ── FITUR SEBELUMNYA (v5.1.0) ────────────────────────────────────────────
+ *  5.1-1: <datalist id="dl-perdirjen"> dihapus sepenuhnya.
+ *  5.1-2: Input dibungkus dalam <div class="search-input-wrapper"> (position:relative).
+ *  5.1-3: <div id="custom-search-dropdown" class="custom-dropdown"> sebagai
+ *         pengganti datalist. Kelas .is-open mengontrol visibilitas (display:block).
+ *  5.1-4: refreshCustomDropdown(tahunFilter, textFilter) menggantikan refreshDatalist.
+ *         Memfilter T-06, mendukung substring matching, dan membatasi 80 item.
+ *  5.1-5: Dropdown hanya hilang saat: klik item, klik di luar, atau Escape.
+ *         Tidak hilang saat mouse bergeser (masalah bawaan <datalist> browser).
+ *  5.1-6: CSS dark-mode override untuk .custom-dropdown dan .custom-dropdown-item.
+ *
+ * ── FITUR SEBELUMNYA (v5.0.0) ────────────────────────────────────────────
+ *  MULTI-1: State.activeEgos[] menggantikan State.currentEgo (null → array).
+ *           Setiap pencarian MENAMBAH ego baru ke kanvas (Append/Union),
+ *           bukan mengganti yang lama.
+ *
+ *  MULTI-2: renderEgoNetwork(newEgoId) diperbarui — mengumpulkan node & edge
+ *           Degree-1 dari SEMUA ID di State.activeEgos, menghindari duplikat,
+ *           dan menandai semua ego aktif dengan gaya isEgo (border tebal).
+ *
+ *  MULTI-3: renderActiveFilterChips() merender chip filter di
+ *           #active-filters-container. Tiap chip punya tombol × untuk
+ *           menghapus satu ego dari kanvas tanpa mereset yang lain.
+ *
+ *  MULTI-4: Jika State.activeEgos kosong setelah penghapusan chip,
+ *           kanvas dibersihkan dan showEmptyState() ditampilkan.
+ *
+ *  MULTI-5: Panel Footer "Fokus di Peta" difokuskan ke ego terakhir yang
+ *           diklik/dipilih (State.lastSelectedEgo).
+ *
+ * ── FITUR SEBELUMNYA (v4.0.0) ────────────────────────────────────────────
+ *  SETTINGS-1..6: Modal Pengaturan (labels, freeze, dark mode).
  *  PATCH-3.4 : salinDetailPerdirjen() menyertakan Relasi & Riwayat.
  *  POIN-9    : Field Tanggal Berlaku, Instansi, Tempat Terbit.
  *  FIX-1..6  : Vis.js toolbar, tahun, datalist, scroll, Filter, deep-link.
@@ -102,13 +156,14 @@
    * ========================================================================= */
 
   var State = {
-    masterMap:       new Map(),  // Map<id_baku, rowObject>
-    allEdgeDefs:     [],         // [{from, to, idRel, _idx}] sudah divalidasi
-    networkInst:     null,       // instance vis.Network aktif
-    nodesDS:         null,       // vis.DataSet nodes ego-network aktif
-    edgesDS:         null,       // vis.DataSet edges ego-network aktif
-    currentEgo:      null,       // nodeId pusat ego-network saat ini
-    visContainer:    null        // FIX-1: div#vis-canvas-container
+    masterMap:        new Map(),  // Map<id_baku, rowObject>
+    allEdgeDefs:      [],         // [{from, to, idRel, _idx}] sudah divalidasi
+    networkInst:      null,       // instance vis.Network aktif
+    nodesDS:          null,       // vis.DataSet nodes multi-ego aktif
+    edgesDS:          null,       // vis.DataSet edges multi-ego aktif
+    activeEgos:       [],         // MULTI-1: array ID semua ego yang aktif di kanvas
+    lastSelectedEgo:  null,       // MULTI-5: ego terakhir yang diklik/dipilih user
+    visContainer:     null        // FIX-1: div#vis-canvas-container
   };
 
   /**
@@ -211,13 +266,65 @@
       '  width: 1px; height: 16px; background: var(--border); flex-shrink: 0;',
       '}',
 
+      /* Search bar: wrapper input + dropdown */
+      '.search-input-wrapper {',
+      '  position: relative; display: flex; flex: 1; align-items: center;',
+      '}',
+
       /* Search bar: input teks */
-      '.map-search-bar input[list] {',
+      '.map-search-bar #search-input {',
       '  border: none; outline: none;',
       '  font-family: var(--font-body); font-size: 12px;',
-      '  color: var(--text-primary); background: transparent; width: 200px;',
+      '  color: var(--text-primary); background: transparent; width: 100%;',
       '}',
-      '.map-search-bar input[list]::placeholder { color: var(--text-muted); }',
+      '.map-search-bar #search-input::placeholder { color: var(--text-muted); }',
+
+      /* Custom Autocomplete Dropdown */
+      '.custom-dropdown {',
+      '  position: absolute; top: calc(100% + 4px); left: 0; width: 100%;',
+      '  min-width: 240px; display: none;',
+      '  background: var(--bg-white);',
+      '  border: 1px solid var(--border-strong);',
+      '  border-radius: var(--radius);',
+      '  box-shadow: var(--shadow-lg);',
+      '  max-height: 280px; overflow-y: auto; z-index: 9999;',
+      '}',
+      '.custom-dropdown.is-open { display: block; }',
+
+      '.custom-dropdown-item {',
+      '  padding: 7px 12px;',
+      '  font-family: var(--font-body); font-size: 12px;',
+      '  color: var(--text-primary);',
+      '  cursor: pointer;',
+      '  border-bottom: 1px solid var(--border);',
+      '  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;',
+      '  transition: background 0.1s;',
+      '}',
+      '.custom-dropdown-item:last-child { border-bottom: none; }',
+      '.custom-dropdown-item:hover {',
+      '  background: var(--bg-hover, #EEF2FF);',
+      '  color: var(--accent, #2C74B3);',
+      '}',
+
+      '.custom-dropdown-empty {',
+      '  padding: 10px 12px;',
+      '  font-family: var(--font-body); font-size: 11px;',
+      '  color: var(--text-muted); text-align: center;',
+      '}',
+
+      /* Dark mode overrides untuk custom dropdown */
+      'body.dark-mode .custom-dropdown {',
+      '  background: var(--bg-surface, #1E2130);',
+      '  border-color: var(--border-strong);',
+      '}',
+      'body.dark-mode .custom-dropdown-item {',
+      '  color: var(--text-primary);',
+      '  border-bottom-color: var(--border);',
+      '}',
+      'body.dark-mode .custom-dropdown-item:hover {',
+      '  background: rgba(44,116,179,0.18);',
+      '  color: #7EB8F7;',
+      '}',
 
       /* FIX-1: Vis.js container tetap di bawah elemen UI floating */
       '#vis-canvas-container {',
@@ -231,6 +338,7 @@
       '#network-map .legend        { z-index: 10; }',
       '#network-map .map-statusbar { z-index: 10; }',
       '#network-map .map-empty-state { z-index: 5; }',
+      '#active-filters-container   { z-index: 10; }',
 
       /* Canvas Vis.js mengisi kontainernya */
       '#vis-canvas-container canvas { display: block !important; }'
@@ -327,14 +435,17 @@
   }
 
   /* =========================================================================
-   *  BAGIAN 5 — UI PENCARIAN DINAMIS (Dropdown Tahun + Datalist)
+   *  BAGIAN 5 — UI PENCARIAN DINAMIS (Dropdown Tahun + Custom Autocomplete)
    * =========================================================================
    *
    *  Mengubah .map-search-bar menjadi:
-   *  [🔍] [Dropdown Tahun 2014–2026] | [Input Pencarian + Datalist T-06]
+   *  [🔍] [Dropdown Tahun 2014–2026] | [Input Pencarian + Custom Dropdown T-06]
    *
    *  FIX-2: Hanya tahun dalam rentang YEAR_MIN–YEAR_MAX yang ditampilkan.
-   *  FIX-3: Datalist hanya berisi T-06, nilai <option> = Penulisan Asli murni.
+   *  FIX-3: Dropdown hanya berisi T-06, nilai = Penulisan Asli murni.
+   *  5.1  : <datalist> diganti Custom Autocomplete Dropdown (div kustom) agar
+   *         tidak hilang saat mouse bergeser. Dropdown hilang hanya saat:
+   *         (a) user memilih item, (b) user klik di luar, (c) user tekan Escape.
    */
   function buildSearchUI() {
     var bar = document.querySelector('.map-search-bar');
@@ -368,35 +479,65 @@
       '</select>' +
       /* Divider */
       '<span class="bar-divider"></span>' +
-      /* FIX-3: Input dengan datalist — placeholder merujuk Penulisan Asli */
-      '<input id="search-input" list="dl-perdirjen"' +
+      /* 5.1: Wrapper relatif untuk input + custom dropdown */
+      '<div class="search-input-wrapper">' +
+      '<input id="search-input"' +
       ' placeholder="Ketik nomor Perdirjen, misal: PER-1/PB/2024..." autocomplete="off"/>' +
-      '<datalist id="dl-perdirjen"></datalist>';
+      '<div id="custom-search-dropdown" class="custom-dropdown"></div>' +
+      '</div>';
 
-    /* FIX-3: Isi datalist awal (semua tahun) */
-    refreshDatalist('');
+    /* 5.1: Isi dropdown kustom awal (semua tahun) */
+    refreshCustomDropdown('', '');
 
     /* Event: Dropdown tahun berubah */
     var selectEl = document.getElementById('filter-tahun');
     if (selectEl) {
       selectEl.addEventListener('change', function () {
-        refreshDatalist(selectEl.value);
         var inputEl = document.getElementById('search-input');
+        var textVal = inputEl ? inputEl.value : '';
+        refreshCustomDropdown(selectEl.value, textVal);
         if (inputEl) { inputEl.value = ''; inputEl.focus(); }
+        var dd = document.getElementById('custom-search-dropdown');
+        if (dd) dd.classList.remove('is-open');
       });
     }
 
-    /* Event: Input pencarian — deteksi pilihan datalist atau Enter */
+    /* Event: Input pencarian — tampilkan dropdown kustom */
     var inputEl = document.getElementById('search-input');
-    if (inputEl) {
-      /* 'change' terpicu saat user memilih dari datalist atau keluar dari field */
-      inputEl.addEventListener('change', function () {
-        var targetId = resolveSearchInput(inputEl.value.trim());
+    var ddEl    = document.getElementById('custom-search-dropdown');
+
+    if (inputEl && ddEl) {
+
+      /* focus: tampilkan dropdown dengan filter saat ini */
+      inputEl.addEventListener('focus', function () {
+        var selEl = document.getElementById('filter-tahun');
+        refreshCustomDropdown(selEl ? selEl.value : '', inputEl.value.trim());
+        ddEl.classList.add('is-open');
+      });
+
+      /* input: perbarui dropdown saat user mengetik */
+      inputEl.addEventListener('input', function () {
+        var selEl = document.getElementById('filter-tahun');
+        refreshCustomDropdown(selEl ? selEl.value : '', inputEl.value.trim());
+        ddEl.classList.add('is-open');
+      });
+
+      /* Delegasi klik pada item dropdown */
+      ddEl.addEventListener('click', function (e) {
+        var item = e.target.closest('.custom-dropdown-item');
+        if (!item) return;
+        var val = item.getAttribute('data-value');
+        if (!val) return;
+        inputEl.value = val;
+        ddEl.classList.remove('is-open');
+        var targetId = resolveSearchInput(val);
         if (targetId) renderEgoNetwork(targetId);
       });
-      /* Enter untuk konfirmasi pencarian manual */
+
+      /* Enter: konfirmasi pencarian manual */
       inputEl.addEventListener('keydown', function (e) {
         if (e.key === 'Enter') {
+          ddEl.classList.remove('is-open');
           var targetId = resolveSearchInput(inputEl.value.trim());
           if (targetId) {
             renderEgoNetwork(targetId);
@@ -405,35 +546,78 @@
             setTimeout(function () { inputEl.style.outline = ''; }, 1200);
           }
         }
+        /* Tutup dropdown dengan Escape */
+        if (e.key === 'Escape') {
+          ddEl.classList.remove('is-open');
+        }
       });
     }
-  }
+
+    /* Tutup dropdown saat klik di luar area search bar */
+    document.addEventListener('click', function (e) {
+      var ddEl2   = document.getElementById('custom-search-dropdown');
+      var inEl    = document.getElementById('search-input');
+      if (!ddEl2) return;
+      if (e.target === inEl) return;
+      if (ddEl2.contains(e.target)) return;
+      ddEl2.classList.remove('is-open');
+    });
+  } // ── akhir buildSearchUI()
 
   /**
-   * Mengisi ulang datalist berdasarkan filter tahun.
+   * 5.1: Mengisi ulang custom dropdown berdasarkan filter tahun dan teks.
    *
-   * FIX-3: Hanya T-06 yang masuk datalist.
-   *        Nilai <option> = Penulisan Asli MURNI (bukan "ID - Penulisan Asli").
+   * Hanya T-06 yang masuk dropdown.
+   * Menampilkan max 80 item agar DOM tidak membengkak.
    *
    * @param {string} tahunFilter — '' untuk semua tahun
+   * @param {string} textFilter  — '' untuk semua teks (substring, case-insensitive)
    */
-  function refreshDatalist(tahunFilter) {
-    var dl = document.getElementById('dl-perdirjen');
-    if (!dl) return;
-    var opts = [];
+  function refreshCustomDropdown(tahunFilter, textFilter) {
+    var dd = document.getElementById('custom-search-dropdown');
+    if (!dd) return;
+
+    var lowerText = (textFilter || '').toLowerCase();
+    var items = [];
+
     State.masterMap.forEach(function (row) {
-      /* FIX-3: Hanya Perdirjen (T-06) */
+      /* Hanya Perdirjen (T-06) */
       if (trim(row['ID Tipe']) !== 'T-06') return;
-      /* FIX-2: Terapkan filter tahun jika dipilih */
+      /* Filter tahun jika dipilih */
       if (tahunFilter && trim(row['Tahun']) !== String(tahunFilter)) return;
 
       var penulisan = trim(row['Penulisan Asli']);
-      if (!penulisan) return; // abaikan baris tanpa penulisan asli
+      if (!penulisan) return;
 
-      /* FIX-3: value = Penulisan Asli murni */
-      opts.push('<option value="' + escH(penulisan) + '">');
+      /* Filter teks jika ada input */
+      if (lowerText && !penulisan.toLowerCase().includes(lowerText)) return;
+
+      items.push(penulisan);
     });
-    dl.innerHTML = opts.join('');
+
+    if (!items.length) {
+      dd.innerHTML =
+        '<div class="custom-dropdown-empty">Tidak ada hasil yang cocok.</div>';
+      return;
+    }
+
+    /* Batasi 80 item agar tetap responsif */
+    var MAX_ITEMS = 80;
+    var limited   = items.length > MAX_ITEMS;
+    var slice     = limited ? items.slice(0, MAX_ITEMS) : items;
+
+    var html = '';
+    slice.forEach(function (penulisan) {
+      html +=
+        '<div class="custom-dropdown-item" data-value="' + escH(penulisan) +
+        '" title="' + escH(penulisan) + '">' + escH(penulisan) + '</div>';
+    });
+    if (limited) {
+      html +=
+        '<div class="custom-dropdown-empty">… dan ' + (items.length - MAX_ITEMS) +
+        ' hasil lainnya. Ketik lebih spesifik.</div>';
+    }
+    dd.innerHTML = html;
   }
 
   /**
@@ -490,49 +674,171 @@
   }
 
   /* =========================================================================
-   *  BAGIAN 6 — EGO-NETWORK RENDERER
+   *  BAGIAN 6 — MULTI-EGO NETWORK RENDERER
+   * =========================================================================
+   *
+   *  MULTI-2: renderEgoNetwork(newEgoId)
+   *    - Cek apakah newEgoId sudah ada di State.activeEgos; jika belum, push.
+   *    - Iterasi SEMUA ID di State.activeEgos untuk mengumpulkan node & edge
+   *      Degree-1 dari setiap ego secara union (tanpa duplikat).
+   *    - Node yang ID-nya ada di State.activeEgos mendapat gaya isEgo.
+   *
+   *  MULTI-3: renderActiveFilterChips()
+   *    - Render chip untuk tiap ego aktif di #active-filters-container.
+   *    - Tombol × menghapus satu ego dan memanggil ulang renderAllEgos().
+   *
+   *  MULTI-4: renderAllEgos()
+   *    - Fungsi internal yang membaca State.activeEgos dan merender ulang
+   *      seluruh grafik dari scratch agar gaya isEgo konsisten.
    * ========================================================================= */
 
-  function renderEgoNetwork(egoId) {
-    if (!State.masterMap.has(egoId)) {
-      console.warn('[DJPb] renderEgoNetwork: ID tidak ditemukan di masterMap:', egoId);
+  /**
+   * Titik masuk: tambahkan newEgoId ke State.activeEgos lalu render ulang.
+   * @param {string} newEgoId
+   */
+  function renderEgoNetwork(newEgoId) {
+    if (!State.masterMap.has(newEgoId)) {
+      console.warn('[DJPb] renderEgoNetwork: ID tidak ditemukan di masterMap:', newEgoId);
       return;
     }
 
-    State.currentEgo = egoId;
-    console.log('[DJPb] Ego-Network untuk:', egoId);
+    /* MULTI-1: Tambahkan ke array jika belum ada */
+    var alreadyActive = false;
+    for (var i = 0; i < State.activeEgos.length; i++) {
+      if (State.activeEgos[i] === newEgoId) { alreadyActive = true; break; }
+    }
+    if (!alreadyActive) {
+      State.activeEgos.push(newEgoId);
+    }
 
-    /* 1. Kumpulkan node-ID ego-network (Degree-1) */
-    var egoNodeIds  = {};
-    var egoEdgeDefs = [];
-    egoNodeIds[egoId] = true;
+    /* Catat sebagai ego terakhir yang dipilih (untuk tombol "Fokus di Peta") */
+    State.lastSelectedEgo = newEgoId;
 
-    State.allEdgeDefs.forEach(function (e) {
-      var fromIsEgo = (e.from === egoId);
-      var toIsEgo   = (e.to   === egoId);
-      if (fromIsEgo || toIsEgo) {
-        egoNodeIds[e.from] = true;
-        egoNodeIds[e.to]   = true;
-        egoEdgeDefs.push(e);
+    /* Render seluruh graf berdasarkan activeEgos terbaru */
+    renderAllEgos();
+
+    /* Perbarui panel detail untuk ego yang baru ditambahkan */
+    var allCurrentEdges = State.edgesDS ? State.edgesDS.get() : [];
+    updateDetailPanel(newEgoId, State.masterMap.get(newEgoId), allCurrentEdges);
+  }
+
+  /**
+   * MULTI-4: Bangun ulang seluruh dataset Vis.js dari State.activeEgos[].
+   * Dipanggil setelah penambahan atau penghapusan ego.
+   *
+   * CLUSTER-1: Identifikasi node Leaf R-01 dan tandai dengan isLeafR01 + parentEgo.
+   */
+  function renderAllEgos() {
+    if (!State.activeEgos.length) {
+      /* Tidak ada ego aktif: bersihkan graf dan tampilkan empty state */
+      if (State.networkInst) {
+        State.nodesDS.clear();
+        State.edgesDS.clear();
       }
+      renderActiveFilterChips();
+      updateStatusBar(0, 0);
+      showEmptyState(
+        'Semua Filter Dihapus',
+        'Gunakan kotak pencarian untuk menambahkan peraturan ke peta.',
+        false
+      );
+      return;
+    }
+
+    console.log('[DJPb] Render Multi-Ego:', State.activeEgos);
+
+    /* ── 1. Kumpulkan semua node-ID & edge-def dari SELURUH ego (union) ── */
+    var unionNodeIds  = {};   // { id: true }
+    var unionEdgeDefs = {};   // { 'e-idx': edgeDef }  — kunci unik by _idx
+
+    State.activeEgos.forEach(function (egoId) {
+      unionNodeIds[egoId] = true;
+      State.allEdgeDefs.forEach(function (e) {
+        if (e.from === egoId || e.to === egoId) {
+          unionNodeIds[e.from] = true;
+          unionNodeIds[e.to]   = true;
+          unionEdgeDefs['e-' + e._idx] = e;
+        }
+      });
     });
 
-    /* 2. Bangun array node Vis.js */
+    /* ── 1b. CLUSTER-1: Identifikasi Leaf R-01 per ego ── */
+    /*
+     * Untuk setiap egoId, kita cari node yang:
+     *  a) Merupakan TARGET dari edge R-01 yang berasal dari egoId (ego → target via R-01)
+     *  b) Merupakan Leaf Node: hanya memiliki 1 edge di dalam unionEdgeDefs
+     *     (derajat = 1, hanya terhubung ke ego tersebut)
+     *
+     * Langkah:
+     *  1. Hitung degree setiap node di dalam graf yang akan dirender
+     *  2. Untuk setiap ego, cari node target R-01 yang degree-nya = 1
+     *  3. Simpan mapping: nodeId → { isLeafR01: true, parentEgo: egoId }
+     */
+
+    /* Hitung degree setiap node berdasarkan unionEdgeDefs */
+    var nodeDegree = {}; // { nodeId: count }
+    Object.keys(unionEdgeDefs).forEach(function (key) {
+      var e = unionEdgeDefs[key];
+      nodeDegree[e.from] = (nodeDegree[e.from] || 0) + 1;
+      nodeDegree[e.to]   = (nodeDegree[e.to]   || 0) + 1;
+    });
+
+    /* Mapping node → info kluster */
+    var leafR01Map = {}; // { nodeId: { isLeafR01: true, parentEgo: egoId } }
+
+    State.activeEgos.forEach(function (egoId) {
+      Object.keys(unionEdgeDefs).forEach(function (key) {
+        var e = unionEdgeDefs[key];
+        /* Hanya relasi R-01 yang berasal dari ego ini */
+        if (e.idRel !== 'R-01') return;
+        if (e.from  !== egoId)  return;
+
+        var targetId = e.to;
+
+        /* Jangan tandai node yang juga merupakan ego aktif */
+        var isActiveEgo = false;
+        for (var i = 0; i < State.activeEgos.length; i++) {
+          if (State.activeEgos[i] === targetId) { isActiveEgo = true; break; }
+        }
+        if (isActiveEgo) return;
+
+        /* Hanya node dengan degree = 1 (leaf) */
+        if ((nodeDegree[targetId] || 0) !== 1) return;
+
+        /* Tandai sebagai Leaf R-01; jika sudah ada parentEgo lain, skip
+           (node yang terhubung ke lebih dari 1 ego tidak bisa di-kluster
+           ke salah satu ego saja — meski degree-nya 1, ini tidak mungkin
+           secara logika; guard ini sebagai safety net) */
+        if (!leafR01Map[targetId]) {
+          leafR01Map[targetId] = { isLeafR01: true, parentEgo: egoId };
+        }
+      });
+    });
+
+    /* ── 2. Bangun array node Vis.js ── */
+    /* Buat lookup set activeEgos untuk O(1) check */
+    var activeEgoSet = {};
+    State.activeEgos.forEach(function (id) { activeEgoSet[id] = true; });
+
     var nodesArray = [];
-    Object.keys(egoNodeIds).forEach(function (id) {
+    Object.keys(unionNodeIds).forEach(function (id) {
       var row = State.masterMap.get(id);
       if (!row) return;
 
       var idTipe    = trim(row['ID Tipe']);
       var penulisan = trim(row['Penulisan Asli']) || id;
       var status    = trim(row['Status Sekarang']);
-      var isEgo     = (id === egoId);
+      var isEgo     = !!activeEgoSet[id];  /* true untuk SEMUA ego aktif */
       var colorDef  = NODE_COLORS[idTipe] || NODE_COLOR_DEFAULT;
 
-      nodesArray.push({
+      /* CLUSTER-1: Bawa informasi leaf R-01 ke dalam properti node */
+      var leafInfo  = leafR01Map[id] || null;
+
+      var nodeObj = {
         id:    id,
         label: penulisan,
-        title: penulisan + '\nStatus: ' + (status || '—') + '\nID: ' + id,
+        title: penulisan + '\nStatus: ' + (status || '—') + '\nID: ' + id +
+               (isEgo ? '\n★ Ego Aktif' : ''),
         color: {
           background: colorDef.background,
           border:     colorDef.border,
@@ -555,12 +861,21 @@
           color: isEgo ? 'rgba(44,116,179,0.35)' : 'rgba(0,0,0,0.18)'
         },
         widthConstraint: { minimum: isEgo ? 90 : 60, maximum: isEgo ? 200 : 160 }
-      });
+      };
+
+      /* CLUSTER-1: Tambahkan properti penanda jika node adalah leaf R-01 */
+      if (leafInfo) {
+        nodeObj.isLeafR01 = true;
+        nodeObj.parentEgo = leafInfo.parentEgo;
+      }
+
+      nodesArray.push(nodeObj);
     });
 
-    /* 3. Bangun array edge Vis.js */
+    /* ── 3. Bangun array edge Vis.js ── */
     var edgesArray = [];
-    egoEdgeDefs.forEach(function (e) {
+    Object.keys(unionEdgeDefs).forEach(function (key) {
+      var e        = unionEdgeDefs[key];
       var colorDef = EDGE_COLORS[e.idRel] || EDGE_COLOR_DEFAULT;
       edgesArray.push({
         id:    'e-' + e._idx,
@@ -585,29 +900,250 @@
       });
     });
 
-    /* 4. Sembunyikan empty-state & render/update network */
+    /* ── 4. Render / update Vis.js ── */
     hideEmptyState();
 
     if (!State.networkInst) {
-      /* Inisialisasi pertama kali */
       initVisNetwork(nodesArray, edgesArray);
     } else {
-      /* Update DataSet tanpa re-init DOM */
+      /* PATCH-1: Buka semua kluster aktif sebelum clear() agar tidak ada
+       * ghost nodes tersisa di memori internal Vis.js. Gunakan .slice()
+       * karena openCluster() memodifikasi body.nodeIndices secara langsung. */
+      var currentNodes = State.networkInst.body.nodeIndices.slice();
+      currentNodes.forEach(function (id) {
+        if (State.networkInst.isCluster(id)) {
+          State.networkInst.openCluster(id);
+        }
+      });
+
       State.nodesDS.clear();
       State.edgesDS.clear();
       State.nodesDS.add(nodesArray);
       State.edgesDS.add(edgesArray);
+
+      /* PATCH-2: applyClustering() dipanggil SEGERA setelah data diisi,
+       * sebelum fisika berjalan → kluster terbentuk sejak awal sehingga
+       * stabilisasi fisika langsung memperhitungkan topologi yang sudah
+       * terkompresi, bukan topologi penuh yang meledak lalu dikompresi. */
+      applyClustering();
+
       /* Aktifkan fisika sementara untuk relayout */
+      State.networkInst.setOptions({ physics: { enabled: true } });
       State.networkInst.once('stabilizationIterationsDone', function () {
         State.networkInst.fit({ animation: { duration: 500, easingFunction: 'easeInOutQuad' } });
-        /* Terapkan kembali setting aktif setelah relayout selesai */
         applyActiveSettings();
       });
     }
 
-    /* 5. Status bar & panel detail */
+    /* ── 5. Update chip filter & status bar ── */
+    renderActiveFilterChips();
     updateStatusBar(nodesArray.length, edgesArray.length);
-    updateDetailPanel(egoId, State.masterMap.get(egoId), edgesArray);
+  }
+
+  /* =========================================================================
+   *  BAGIAN 6b — SISTEM KLUSTER (CLUSTER-2)
+   * =========================================================================
+   *
+   *  applyClustering() dipanggil setelah fit() selesai di renderAllEgos().
+   *  Untuk setiap egoId di State.activeEgos, fungsi ini:
+   *    1. Menggunakan State.networkInst.cluster() dengan joinCondition yang
+   *       mencocokkan isLeafR01 === true dan parentEgo === egoId.
+   *    2. Di processProperties, menghitung jumlah child nodes:
+   *       - Jika < 3 : batalkan kluster (return null agar Vis.js tidak membuat cluster)
+   *       - Jika >= 3: set label kluster dan properti tampilan
+   *    3. clusterNodeProperties mengatur desain visual node kluster.
+   * ========================================================================= */
+
+  /**
+   * CLUSTER-2: Terapkan kluster untuk setiap ego aktif.
+   * Dipanggil tepat setelah State.networkInst.fit() di renderAllEgos().
+   */
+  function applyClustering() {
+    var net = State.networkInst;
+    if (!net) return;
+
+    State.activeEgos.forEach(function (egoId) {
+      net.cluster({
+        /**
+         * joinCondition: kembalikan true hanya untuk node yang merupakan
+         * Leaf R-01 milik ego ini.
+         *
+         * @param {Object} nodeOptions — properti node dari DataSet
+         * @returns {boolean}
+         */
+        joinCondition: function (nodeOptions) {
+          return nodeOptions.isLeafR01 === true &&
+                 nodeOptions.parentEgo === egoId;
+        },
+
+        /**
+         * processProperties: dipanggil dengan daftar child nodes yang
+         * memenuhi joinCondition. Gunakan ini untuk:
+         *  - Memutuskan apakah kluster benar-benar dibuat (< 3 → null)
+         *  - Mengatur label dan properti kluster jika dibuat
+         *
+         * @param {Object} clusterOptions  — properti kluster default dari Vis.js
+         * @param {Array}  childNodes      — array objek node yang masuk kluster
+         * @param {Array}  childEdges      — array objek edge yang menghubungkan
+         * @returns {Object|null}
+         */
+        processProperties: function (clusterOptions, childNodes /*, childEdges */) {
+          var count = childNodes.length;
+
+          /* Jika kurang dari 3 node: tolak kluster — kembalikan clusterOptions
+           * dengan flag khusus yang akan kita cek, ATAU cukup kembalikan
+           * objek dengan label kosong. Cara paling bersih di Vis.js v9:
+           * kembalikan null untuk mencegah pembentukan kluster. */
+          if (count < 3) {
+            /* Vis.js akan tetap membuat kluster jika kita return objek apapun.
+             * Untuk mencegahnya, kita set clusterOptions.skipCluster = true
+             * dan tangkap di luar — namun Vis.js tidak mendukung ini secara
+             * native. Solusi: kembalikan objek dengan label "" lalu segera
+             * buka kluster tersebut setelahnya (openCluster).
+             * Pendekatan terbaik yang kompatibel: set label kosong &
+             * tandai agar dibuka ulang. */
+            clusterOptions._skipOpen = true;
+            clusterOptions.label = '';
+            return clusterOptions;
+          }
+
+          /* Kluster valid (>= 3 node): atur label */
+          clusterOptions.label =
+            '+' + count + ' Dasar Hukum\n(Klik Ganda Buka)';
+
+          return clusterOptions;
+        },
+
+        /**
+         * clusterNodeProperties: desain visual node kluster.
+         */
+        clusterNodeProperties: {
+          shape:       'circle',
+          color: {
+            background: '#3182CE',
+            border:     '#2B6CB0',
+            highlight: {
+              background: '#4299E1',
+              border:     '#2B6CB0'
+            },
+            hover: {
+              background: '#4299E1',
+              border:     '#2B6CB0'
+            }
+          },
+          font: {
+            color: '#ffffff',
+            size:  11,
+            face:  'Plus Jakarta Sans, sans-serif',
+            multi: true   /* izinkan \n dalam label */
+          },
+          borderWidth:  2,
+          shadow:       true,
+          widthConstraint:  { minimum: 80, maximum: 120 },
+          heightConstraint: { minimum: 80 }
+        }
+      });
+    });
+
+    /* ── Setelah semua kluster dibentuk: buka kembali kluster dengan < 3 node ── */
+    /*
+     * Vis.js tidak menyediakan cara langsung untuk membatalkan pembentukan
+     * kluster dari dalam processProperties. Pendekatan yang digunakan:
+     * iterasi semua node di network; jika sebuah node adalah kluster DAN
+     * jumlah node di dalamnya < 3, langsung openCluster.
+     */
+    /* PATCH-4: Gunakan .slice() agar iterasi tidak rusak ketika openCluster()
+     * memodifikasi net.body.nodeIndices secara in-place di tengah forEach. */
+    var allNodeIds = net.body.nodeIndices.slice();
+    allNodeIds.forEach(function (nodeId) {
+      if (!net.isCluster(nodeId)) return;
+      /* Ambil node-node di dalam kluster ini */
+      var nodesInCluster = net.getNodesInCluster(nodeId);
+      if (nodesInCluster.length < 3) {
+        net.openCluster(nodeId);
+      }
+    });
+  }
+
+  /**
+   * MULTI-3: Render chip filter aktif ke #active-filters-container.
+   * Setiap chip menampilkan label Penulisan Asli dan tombol × untuk hapus.
+   */
+  function renderActiveFilterChips() {
+    var container = document.getElementById('active-filters-container');
+    if (!container) return;
+
+    if (!State.activeEgos.length) {
+      container.innerHTML = '';
+      return;
+    }
+
+    var html = '';
+    State.activeEgos.forEach(function (egoId) {
+      var row       = State.masterMap.get(egoId);
+      var label     = row ? (trim(row['Penulisan Asli']) || egoId) : egoId;
+      var shortLabel = label.length > 32 ? label.substring(0, 30) + '…' : label;
+      html +=
+        '<span class="ego-filter-chip" data-ego-id="' + escH(egoId) + '" title="' + escH(label) + '">' +
+        '<span class="ego-filter-chip-label">' + escH(shortLabel) + '</span>' +
+        '<button class="ego-filter-chip-remove" title="Hapus ' + escH(shortLabel) + ' dari peta" aria-label="Hapus">&#x2715;</button>' +
+        '</span>';
+    });
+    container.innerHTML = html;
+
+    /* Pasang event listener pada tombol × */
+    container.querySelectorAll('.ego-filter-chip-remove').forEach(function (btn) {
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var chip  = btn.closest('.ego-filter-chip');
+        var egoId = chip ? chip.getAttribute('data-ego-id') : null;
+        if (!egoId) return;
+        removeEgoFromActive(egoId);
+      });
+    });
+  }
+
+  /**
+   * Hapus satu ego dari State.activeEgos dan render ulang.
+   * @param {string} egoId
+   */
+  function removeEgoFromActive(egoId) {
+    State.activeEgos = State.activeEgos.filter(function (id) { return id !== egoId; });
+
+    /* Jika ego yang dihapus adalah lastSelectedEgo, ganti ke ego terakhir yang tersisa */
+    if (State.lastSelectedEgo === egoId) {
+      State.lastSelectedEgo = State.activeEgos.length
+        ? State.activeEgos[State.activeEgos.length - 1]
+        : null;
+    }
+
+    if (!State.activeEgos.length) {
+      /* Semua filter dihapus: bersihkan kanvas */
+      if (State.networkInst) {
+        State.nodesDS.clear();
+        State.edgesDS.clear();
+      }
+      renderActiveFilterChips();
+      updateStatusBar(0, 0);
+      resetDetailPanel();
+      showEmptyState(
+        'Semua Filter Dihapus',
+        'Gunakan kotak pencarian untuk menambahkan peraturan ke peta.',
+        false
+      );
+      return;
+    }
+
+    /* Masih ada ego tersisa: render ulang dan perbarui panel ke lastSelectedEgo */
+    renderAllEgos();
+    if (State.lastSelectedEgo) {
+      var allCurrentEdges = State.edgesDS ? State.edgesDS.get() : [];
+      updateDetailPanel(
+        State.lastSelectedEgo,
+        State.masterMap.get(State.lastSelectedEgo),
+        allCurrentEdges
+      );
+    }
   }
 
   /**
@@ -666,6 +1202,11 @@
       options
     );
 
+    /* PATCH-3: applyClustering() dipanggil synchronous tepat setelah Network
+     * dibuat, sebelum stabilisasi fisika pertama berjalan. Dengan demikian
+     * Vis.js langsung menstabilkan topologi yang sudah terkompresi. */
+    applyClustering();
+
     State.networkInst.once('stabilizationIterationsDone', function () {
       State.networkInst.fit({ animation: { duration: 600, easingFunction: 'easeInOutQuad' } });
       /* Terapkan setting aktif setelah graph pertama kali stabil */
@@ -681,7 +1222,11 @@
    * ========================================================================= */
 
   /**
-   * Event Vis.js: klik node, deselect, zoom.
+   * Event Vis.js: klik node, deselect, zoom, doubleClick.
+   *
+   * CLUSTER-3: doubleClick diperbarui untuk menangani node kluster:
+   *   - Jika kluster → openCluster() + applyActiveSettings()
+   *   - Jika bukan kluster → renderEgoNetwork() seperti sebelumnya
    */
   function registerNetworkEvents() {
     var net = State.networkInst;
@@ -690,8 +1235,15 @@
     net.on('selectNode', function (params) {
       if (!params.nodes.length) return;
       var nodeId = params.nodes[0];
+
+      /* Jika node yang diklik adalah kluster, tidak perlu update panel detail */
+      if (net.isCluster(nodeId)) return;
+
       var data   = State.masterMap.get(nodeId);
       if (!data) return;
+
+      /* MULTI-5: Catat node yang diklik sebagai lastSelectedEgo */
+      State.lastSelectedEgo = nodeId;
 
       var connEdgeIds = net.getConnectedEdges(nodeId);
       var connEdges   = connEdgeIds
@@ -713,10 +1265,26 @@
       if (zoomEl) zoomEl.textContent = pct + '%';
     });
 
-    /* Dobel-klik node → ego-network baru (deep-link via kanvas) */
+    /**
+     * CLUSTER-3: Dobel-klik node.
+     *
+     * Cek apakah node yang diklik adalah kluster:
+     *  - YA  : buka kluster, lalu terapkan kembali setting aktif
+     *  - TIDAK: tambahkan sebagai ego baru (deep-link via kanvas)
+     */
     net.on('doubleClick', function (params) {
       if (!params.nodes.length) return;
-      renderEgoNetwork(params.nodes[0]);
+      var clickedId = params.nodes[0];
+
+      if (net.isCluster(clickedId)) {
+        /* CLUSTER-3: Buka kluster */
+        net.openCluster(clickedId);
+        /* Terapkan kembali setting aktif agar fisika/label tetap konsisten */
+        applyActiveSettings();
+      } else {
+        /* Bukan kluster: tambahkan ego baru seperti sebelumnya */
+        renderEgoNetwork(clickedId);
+      }
     });
   }
 
@@ -778,10 +1346,12 @@
       resetDetailPanel();
     });
 
-    /* Panel Footer — Fokus di Peta */
+    /* Panel Footer — Fokus di Peta (MULTI-5: gunakan lastSelectedEgo) */
     on('.panel-footer-btn:not(.primary)', 'click', function () {
-      if (!State.networkInst || !State.currentEgo) return;
-      State.networkInst.focus(State.currentEgo, {
+      var focusTarget = State.lastSelectedEgo ||
+                        (State.activeEgos.length ? State.activeEgos[State.activeEgos.length - 1] : null);
+      if (!State.networkInst || !focusTarget) return;
+      State.networkInst.focus(focusTarget, {
         scale: 1.4,
         animation: { duration: 500, easingFunction: 'easeInOutQuad' }
       });
@@ -1172,8 +1742,9 @@
    */
   function resetAll() {
     State.masterMap.clear();
-    State.allEdgeDefs = [];
-    State.currentEgo  = null;
+    State.allEdgeDefs     = [];
+    State.activeEgos      = [];   /* MULTI-1: reset array, bukan null */
+    State.lastSelectedEgo = null;
 
     if (State.networkInst) {
       State.networkInst.destroy();
@@ -1188,6 +1759,10 @@
       oldContainer.parentNode.removeChild(oldContainer);
     }
     State.visContainer = null;
+
+    /* Bersihkan chip filter aktif */
+    var filterContainer = document.getElementById('active-filters-container');
+    if (filterContainer) filterContainer.innerHTML = '';
 
     /* Kembalikan search bar ke bentuk aslinya (sebelum buildSearchUI) */
     var bar = document.querySelector('.map-search-bar');
@@ -1220,7 +1795,7 @@
    * Terapkan kembali semua setting yang sedang aktif ke graf yang baru dirender.
    * Dipanggil setelah stabilisasi selesai pada setiap render baru.
    */
- function applyActiveSettings() {
+  function applyActiveSettings() {
     applyHideLabels(Settings.hideLabels);
     applyFreezeNetwork(Settings.freezeNet);
     /* Dark mode tidak perlu diulang — itu class di body, tidak bergantung graf */
