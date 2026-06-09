@@ -947,6 +947,410 @@
     .legend          { animation-delay: .15s; }
     .map-statusbar   { animation-delay: .20s; }
     #detail-panel    { animation-delay: .10s; }
+
+    /* ═══════════════════════════════════════════════════════════════
+       SETTINGS MODAL
+       ═══════════════════════════════════════════════════════════════ */
+
+    /* -- Overlay & Kontainer Modal -- */
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal.is-open {
+      display: flex;
+    }
+
+    .modal-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(10, 38, 71, 0.55);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      animation: overlayIn .2s ease both;
+    }
+
+    @keyframes overlayIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    .modal-box {
+      position: relative;
+      z-index: 1;
+      background: var(--bg-white);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      width: 100%;
+      max-width: 440px;
+      margin: 16px;
+      display: flex;
+      flex-direction: column;
+      animation: modalBoxIn .22s cubic-bezier(.34,1.56,.64,1) both;
+      overflow: hidden;
+    }
+
+    @keyframes modalBoxIn {
+      from { opacity: 0; transform: translateY(-18px) scale(.97); }
+      to   { opacity: 1; transform: translateY(0)     scale(1);   }
+    }
+
+    /* -- Modal Header -- */
+    .modal-header {
+      padding: 16px 16px 14px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-panel);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .modal-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .modal-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: var(--radius);
+      background: var(--djpb-pale);
+      border: 1px solid rgba(44,116,179,.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: var(--djpb-mid);
+    }
+
+    .modal-icon svg { width: 16px; height: 16px; }
+
+    .modal-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--djpb-blue);
+      line-height: 1.3;
+    }
+
+    .modal-subtitle {
+      font-size: 10.5px;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+
+    .modal-close-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      flex-shrink: 0;
+      transition: background .12s, color .12s;
+    }
+
+    .modal-close-btn:hover { background: var(--bg-canvas); color: var(--text-primary); }
+    .modal-close-btn svg  { width: 13px; height: 13px; }
+
+    /* -- Modal Body -- */
+    .modal-body {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      overflow-y: auto;
+    }
+
+    .modal-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 8px 0;
+    }
+
+    /* -- Settings Group -- */
+    .settings-group {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .settings-group-label {
+      font-size: 9.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: var(--text-muted);
+      padding: 0 4px 6px;
+    }
+
+    /* -- Settings Row -- */
+    .settings-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: var(--radius);
+      transition: background .12s;
+    }
+
+    .settings-row:hover { background: var(--bg-canvas); }
+
+    .settings-row-info {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .settings-row-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-canvas);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: var(--text-secondary);
+      margin-top: 1px;
+    }
+
+    .settings-row-icon svg { width: 13px; height: 13px; }
+
+    .settings-row-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-primary);
+      line-height: 1.3;
+    }
+
+    .settings-row-desc {
+      font-size: 10.5px;
+      color: var(--text-muted);
+      margin-top: 2px;
+      line-height: 1.4;
+    }
+
+    /* -- Toggle Switch -- */
+    .toggle-switch {
+      flex-shrink: 0;
+      display: inline-block;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .toggle-switch input[type="checkbox"] {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+      pointer-events: none;
+    }
+
+    .toggle-track {
+      display: block;
+      width: 40px;
+      height: 22px;
+      border-radius: 20px;
+      background: var(--border-strong);
+      border: 1px solid transparent;
+      position: relative;
+      transition: background .22s, border-color .22s, box-shadow .22s;
+    }
+
+    .toggle-thumb {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 1px 3px rgba(0,0,0,.22);
+      transition: transform .22s cubic-bezier(.34,1.56,.64,1);
+    }
+
+    .toggle-switch input:checked + .toggle-track {
+      background: var(--djpb-accent);
+      border-color: var(--djpb-mid);
+    }
+
+    .toggle-switch input:checked + .toggle-track .toggle-thumb {
+      transform: translateX(18px);
+    }
+
+    .toggle-switch:hover .toggle-track {
+      box-shadow: 0 0 0 3px rgba(44,116,179,.15);
+    }
+
+    /* -- Modal Footer -- */
+    .modal-footer {
+      border-top: 1px solid var(--border);
+      padding: 12px 16px;
+      background: var(--bg-panel);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .modal-footer-note {
+      display: flex;
+      align-items: flex-start;
+      gap: 5px;
+      font-size: 10px;
+      color: var(--text-muted);
+      line-height: 1.4;
+      flex: 1;
+    }
+
+    .modal-reset-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 13px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border-strong);
+      background: var(--bg-white);
+      cursor: pointer;
+      font-family: var(--font-body);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      transition: background .12s, border-color .12s, color .12s;
+      flex-shrink: 0;
+    }
+
+    .modal-reset-btn:hover {
+      background: #FEF2F2;
+      border-color: #FECACA;
+      color: #991B1B;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       DARK MODE  (.dark-mode pada <body>)
+       ═══════════════════════════════════════════════════════════════ */
+
+    body.dark-mode {
+      --bg-canvas:      #0F1923;
+      --bg-white:       #162032;
+      --bg-panel:       #1A2840;
+      --border:         #2A3F5A;
+      --border-strong:  #334D6E;
+      --text-primary:   #E8F0F8;
+      --text-secondary: #8AAFC8;
+      --text-muted:     #4D6880;
+      --djpb-pale:      #1A3050;
+      --status-active-bg: #0D2A1A;
+      --status-revoked-bg: #2A0F0F;
+    }
+
+    /* Kanvas peta: timpa background agar ikut gelap */
+    body.dark-mode #network-map {
+      background: #0D1824;
+      background-image:
+        radial-gradient(circle at 20% 50%, rgba(44,116,179,.06) 0%, transparent 60%),
+        radial-gradient(circle at 80% 20%, rgba(10,38,71,.12) 0%, transparent 50%),
+        linear-gradient(90deg, rgba(42,63,90,.5) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(42,63,90,.5) 1px, transparent 1px);
+      background-size: auto, auto, 32px 32px, 32px 32px;
+    }
+
+    body.dark-mode #network-map::before {
+      background-image: radial-gradient(circle, rgba(44,116,179,.25) 1px, transparent 1px);
+    }
+
+    /* Legenda & statusbar chip menyesuaikan */
+    body.dark-mode .legend {
+      background: rgba(22, 32, 50, 0.92);
+      border-color: rgba(51, 77, 110, 0.8);
+    }
+
+    body.dark-mode .map-stat-chip {
+      background: rgba(22, 32, 50, 0.92);
+      border-color: rgba(51, 77, 110, 0.8);
+    }
+
+    /* Toolbar grup */
+    body.dark-mode .map-toolbar-group,
+    body.dark-mode .map-search-bar {
+      background: #162032;
+      border-color: var(--border);
+    }
+
+    body.dark-mode .map-tool-btn {
+      color: var(--text-secondary);
+    }
+
+    body.dark-mode .map-tool-btn:hover {
+      background: var(--bg-panel);
+      color: var(--djpb-sky);
+    }
+
+    body.dark-mode .map-tool-btn.active {
+      background: var(--djpb-mid);
+      color: #fff;
+    }
+
+    body.dark-mode .map-tool-btn {
+      border-color: var(--border);
+    }
+
+    /* Chip relasi di panel */
+    body.dark-mode .relasi-chip.cite   { background: #0D1E38; border-color: #1D4480; color: #7EB3E8; }
+    body.dark-mode .relasi-chip.amend  { background: #1E1800; border-color: #4A3C00; color: #C9A83A; }
+    body.dark-mode .relasi-chip.revoke { background: #2A0F0F; border-color: #5A1A1A; color: #E88080; }
+
+    /* Rel-pill di tabel riwayat */
+    body.dark-mode .rel-pill.r-cite        { background: #0D1E38; color: #7EB3E8; }
+    body.dark-mode .rel-pill.r-revoke-all  { background: #2A0F0F; color: #E88080; }
+    body.dark-mode .rel-pill.r-revoke-part { background: #2A1500; color: #E8A070; }
+    body.dark-mode .rel-pill.r-amend       { background: #1E1800; color: #C9A83A; }
+
+    /* Type badge */
+    body.dark-mode .type-badge.perdirjen { background: #0D2A1A; border-color: #1A5533; color: #5CC88A; }
+    body.dark-mode .type-badge.pmk       { background: #0D1E38; border-color: #1D4480; color: #7EB3E8; }
+    body.dark-mode .type-badge.uu        { background: #1A0D38; border-color: #3D2270; color: #B08AE8; }
+
+    /* Node-id chip */
+    body.dark-mode .node-id { background: var(--djpb-pale); color: var(--djpb-sky); }
+
+    /* Modal dalam dark mode */
+    body.dark-mode .modal-box        { background: var(--bg-white); border-color: var(--border); }
+    body.dark-mode .modal-header     { background: var(--bg-panel); }
+    body.dark-mode .modal-footer     { background: var(--bg-panel); }
+    body.dark-mode .modal-icon       { background: var(--djpb-pale); }
+    body.dark-mode .settings-row:hover { background: var(--bg-panel); }
+    body.dark-mode .settings-row-icon  { background: var(--bg-panel); border-color: var(--border); }
+    body.dark-mode .modal-reset-btn    { background: var(--bg-canvas); border-color: var(--border); }
+    body.dark-mode .modal-reset-btn:hover { background: #2A0F0F; border-color: #5A1A1A; color: #E88080; }
+
+    /* Toolbar-btn aktif di header (dark mode) — beri highlight saat dark mode ON */
+    body.dark-mode .toolbar-btn[title="Pengaturan"] {
+      background: rgba(44,116,179,.35);
+      border-color: rgba(74,158,219,.45);
+      color: #A8D4F5;
+    }
+
   </style>
 </head>
 <body>
@@ -1233,7 +1637,139 @@
         </button>
       </div>
 
-    </div></div></div><script src="djpb-engine.js"></script>
+    </div></div></div><!-- ═══════════════════════════════════════════════════════════════
+     SETTINGS MODAL
+     ═══════════════════════════════════════════════════════════════ -->
+<div id="settings-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="settings-modal-title">
+  <div class="modal-overlay" id="settings-overlay"></div>
+  <div class="modal-box">
+
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <div class="modal-title-wrap">
+        <div class="modal-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06
+                     a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09
+                     A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83
+                     l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09
+                     A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83
+                     l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09
+                     a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83
+                     l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09
+                     a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+        </div>
+        <div>
+          <div class="modal-title" id="settings-modal-title">Pengaturan Tampilan</div>
+          <div class="modal-subtitle">Kendali UI/UX dan Visualisasi Graf</div>
+        </div>
+      </div>
+      <button class="modal-close-btn" id="settings-close-btn" title="Tutup">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="modal-body">
+
+      <!-- Grup: Tampilan Graf -->
+      <div class="settings-group">
+        <div class="settings-group-label">Tampilan Graf</div>
+
+        <!-- Toggle 1: Sembunyikan Teks Garis -->
+        <div class="settings-row">
+          <div class="settings-row-info">
+            <div class="settings-row-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                <line x1="1" y1="1" x2="23" y2="23"/>
+              </svg>
+            </div>
+            <div>
+              <div class="settings-row-label">Sembunyikan Teks pada Garis Relasi</div>
+              <div class="settings-row-desc">Label "Mengingat", "Mengubah", dll tidak ditampilkan di atas garis</div>
+            </div>
+          </div>
+          <label class="toggle-switch" title="Sembunyikan teks garis relasi">
+            <input type="checkbox" id="toggle-hide-labels">
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          </label>
+        </div>
+
+        <!-- Toggle 2: Bekukan Jaringan -->
+        <div class="settings-row">
+          <div class="settings-row-info">
+            <div class="settings-row-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="5 3 19 12 5 21 5 3"/>
+              </svg>
+            </div>
+            <div>
+              <div class="settings-row-label">Bekukan Jaringan</div>
+              <div class="settings-row-desc">Matikan animasi fisika agar node tidak bergerak</div>
+            </div>
+          </div>
+          <label class="toggle-switch" title="Bekukan animasi jaringan">
+            <input type="checkbox" id="toggle-freeze-network">
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Divider -->
+      <div class="modal-divider"></div>
+
+      <!-- Grup: Antarmuka -->
+      <div class="settings-group">
+        <div class="settings-group-label">Antarmuka</div>
+
+        <!-- Toggle 3: Dark Mode -->
+        <div class="settings-row">
+          <div class="settings-row-info">
+            <div class="settings-row-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+              </svg>
+            </div>
+            <div>
+              <div class="settings-row-label">Mode Gelap (Dark Mode)</div>
+              <div class="settings-row-desc">Ubah tema antarmuka ke palet warna gelap</div>
+            </div>
+          </div>
+          <label class="toggle-switch" title="Aktifkan Dark Mode">
+            <input type="checkbox" id="toggle-dark-mode">
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          </label>
+        </div>
+      </div>
+
+    </div><!-- /modal-body -->
+
+    <!-- Modal Footer -->
+    <div class="modal-footer">
+      <div class="modal-footer-note">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:12px;height:12px;flex-shrink:0;">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        Pengaturan bersifat sementara dan akan direset saat halaman dimuat ulang.
+      </div>
+      <button class="modal-reset-btn" id="settings-reset-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;">
+          <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/>
+        </svg>
+        Kembalikan ke Pengaturan Awal
+      </button>
+    </div>
+
+  </div><!-- /modal-box -->
+</div><!-- /settings-modal -->
+
+<script src="djpb-engine.js"></script>
 
 </body>
 </html>

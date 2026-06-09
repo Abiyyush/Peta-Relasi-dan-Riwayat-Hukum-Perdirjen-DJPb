@@ -1,30 +1,31 @@
 /**
  * ╔══════════════════════════════════════════════════════════════════════════╗
  * ║  MESIN JAVASCRIPT — Peta Relasi dan Riwayat Hukum Perdirjen DJPb       ║
- * ║  Versi : 3.3.1  (CSS Fix — Panel flex-shrink, scroll, word-wrap)       ║
+ * ║  Versi : 4.0.0  (Settings Modal — Toggle Labels, Freeze, Dark Mode)    ║
  * ║  Tempel : Sebagai file djpb-engine.js, lalu panggil via <script src>   ║
  * ║           tepat sebelum </body> di index.html                           ║
  * ╚══════════════════════════════════════════════════════════════════════════╝
  *
- * ── DAFTAR PERBAIKAN (v3.3.0) ─────────────────────────────────────────────
- *  POIN-9 : updateDetailPanel() mengekstrak Tanggal Berlaku, Instansi
- *           Penerbit, dan Tempat Terbit dari masterMap dan mengisinya ke
- *           ID DOM baru: dp-tgl-berlaku, dp-instansi, dp-tempat.
+ * ── FITUR BARU (v4.0.0) ───────────────────────────────────────────────────
+ *  SETTINGS-1: Modal Pengaturan (#settings-modal) muncul saat tombol
+ *              roda gigi di header diklik. Overlay menutup modal saat diklik.
  *
- *  POIN-10: Event listener Ekspor header dihapus. Alert clipboard pada
- *           tombol "Salin Detail Perdirjen" diperbarui teks notifikasinya.
+ *  SETTINGS-2: Toggle "Sembunyikan Teks Garis" — iterasi edgesDS dan
+ *              set font.size=0 / kembalikan ke ukuran asli berdasarkan
+ *              EDGE_COLORS.
  *
- *  POIN-11: injectDynamicStyles() diperbarui — .detail-card-body dan
- *           .riwayat-table-wrap memiliki max-height:250px; overflow-y:auto;
- *           overflow-x:auto; agar setiap seksi dapat di-scroll independen.
+ *  SETTINGS-3: Toggle "Bekukan Jaringan" — setOptions physics enabled
+ *              true/false secara mulus.
  *
- * ── PERBAIKAN TERDAHULU (v3.2.0) ──────────────────────────────────────────
- *  FIX-1: Vis.js tidak lagi menghapus .map-toolbar / .legend / .map-statusbar.
- *  FIX-2: Dropdown tahun hanya menampilkan rentang 2014–2026 (descending).
- *  FIX-3: Datalist pencarian HANYA untuk T-06 (Perdirjen).
- *  FIX-4: CSS dinamis memastikan #detail-panel scroll dengan benar.
- *  FIX-5: Event listener tombol .toolbar-btn[title="Filter"] terdaftar.
- *  FIX-6: Deep-linking bekerja di chip relasi & baris riwayat.
+ *  SETTINGS-4: Toggle "Dark Mode" — toggle class .dark-mode di <body>.
+ *
+ *  SETTINGS-5: Tombol "Kembalikan ke Pengaturan Awal" — reset semua toggle
+ *              dan kembalikan state visual ke default.
+ *
+ * ── DAFTAR PERBAIKAN TERDAHULU (v3.4) ────────────────────────────────────
+ *  PATCH-3.4 : salinDetailPerdirjen() menyertakan Relasi & Riwayat.
+ *  POIN-9    : Field Tanggal Berlaku, Instansi, Tempat Terbit.
+ *  FIX-1..6  : Vis.js toolbar, tahun, datalist, scroll, Filter, deep-link.
  */
 
 (function () {
@@ -108,6 +109,18 @@
     edgesDS:         null,       // vis.DataSet edges ego-network aktif
     currentEgo:      null,       // nodeId pusat ego-network saat ini
     visContainer:    null        // FIX-1: div#vis-canvas-container
+  };
+
+  /**
+   * SETTINGS-1: State terpusat untuk tiga toggle pengaturan.
+   * hideLabels  — apakah label garis relasi disembunyikan
+   * freezeNet   — apakah fisika Vis.js dimatikan
+   * darkMode    — apakah tema gelap aktif
+   */
+  var Settings = {
+    hideLabels: false,
+    freezeNet:  false,
+    darkMode:   false
   };
 
   /* =========================================================================
@@ -585,10 +598,10 @@
       State.nodesDS.add(nodesArray);
       State.edgesDS.add(edgesArray);
       /* Aktifkan fisika sementara untuk relayout */
-      State.networkInst.setOptions({ physics: { enabled: true } });
       State.networkInst.once('stabilizationIterationsDone', function () {
-        State.networkInst.setOptions({ physics: { enabled: false } });
         State.networkInst.fit({ animation: { duration: 500, easingFunction: 'easeInOutQuad' } });
+        /* Terapkan kembali setting aktif setelah relayout selesai */
+        applyActiveSettings();
       });
     }
 
@@ -654,8 +667,9 @@
     );
 
     State.networkInst.once('stabilizationIterationsDone', function () {
-      State.networkInst.setOptions({ physics: { enabled: false } });
       State.networkInst.fit({ animation: { duration: 600, easingFunction: 'easeInOutQuad' } });
+      /* Terapkan setting aktif setelah graph pertama kali stabil */
+      applyActiveSettings();
     });
 
     registerNetworkEvents();
@@ -755,10 +769,8 @@
       }
     });
 
-    /* 3. Pengaturan */
-    on('.toolbar-btn[title="Pengaturan"]', 'click', function () {
-      alert('Menu pengaturan sedang dalam pengembangan.\nFitur akan segera tersedia.');
-    });
+    /* 3. Pengaturan — buka modal */
+    on('.toolbar-btn[title="Pengaturan"]', 'click', openSettingsModal);
 
     /* Panel — tombol tutup */
     on('.panel-close-btn', 'click', function () {
@@ -1193,6 +1205,190 @@
   }
 
   /* =========================================================================
+   *  BAGIAN 9b — SETTINGS MODAL
+   * =========================================================================
+   *
+   *  SETTINGS-1 : openSettingsModal / closeSettingsModal
+   *  SETTINGS-2 : applyHideLabels(bool)
+   *  SETTINGS-3 : applyFreezeNetwork(bool)
+   *  SETTINGS-4 : applyDarkMode(bool)
+   *  SETTINGS-5 : resetSettings()
+   *  SETTINGS-6 : registerSettingsModal() — pasang semua listener modal
+   * ========================================================================= */
+
+  /**
+   * Terapkan kembali semua setting yang sedang aktif ke graf yang baru dirender.
+   * Dipanggil setelah stabilisasi selesai pada setiap render baru.
+   */
+ function applyActiveSettings() {
+    applyHideLabels(Settings.hideLabels);
+    applyFreezeNetwork(Settings.freezeNet);
+    /* Dark mode tidak perlu diulang — itu class di body, tidak bergantung graf */
+  }
+
+  /**
+   * Buka modal pengaturan dan sinkronkan posisi toggle ke state Settings.
+   */
+  function openSettingsModal() {
+    var modal = document.getElementById('settings-modal');
+    if (!modal) return;
+
+    /* Sinkronkan checkbox ke Settings state saat ini */
+    syncToggleUI();
+
+    modal.classList.add('is-open');
+    document.body.style.overflow = 'hidden'; // cegah scroll background
+  }
+
+  /**
+   * Tutup modal pengaturan.
+   */
+  function closeSettingsModal() {
+    var modal = document.getElementById('settings-modal');
+    if (!modal) return;
+    modal.classList.remove('is-open');
+    document.body.style.overflow = '';
+  }
+
+  /**
+   * Sinkronkan state checkbox DOM ke objek Settings.
+   */
+  function syncToggleUI() {
+    var elLabels = document.getElementById('toggle-hide-labels');
+    var elFreeze = document.getElementById('toggle-freeze-network');
+    var elDark   = document.getElementById('toggle-dark-mode');
+    if (elLabels) elLabels.checked = Settings.hideLabels;
+    if (elFreeze) elFreeze.checked = Settings.freezeNet;
+    if (elDark)   elDark.checked   = Settings.darkMode;
+  }
+
+  /* ──────────────────────────────────────────────────────────────────────────
+   * SETTINGS-2: Sembunyikan / tampilkan label teks di atas garis relasi.
+   *
+   * Jika hide=true  → iterasi semua edge di edgesDS, set font.size=0
+   * Jika hide=false → kembalikan font.size=9 dan label dari EDGE_COLORS
+   * ────────────────────────────────────────────────────────────────────────── */
+  function applyHideLabels(hide) {
+    Settings.hideLabels = hide;
+    if (!State.edgesDS) return; // belum ada graf, tidak perlu apa-apa
+
+    var updates = [];
+    State.edgesDS.forEach(function (edge) {
+      if (hide) {
+        /* Sembunyikan: font size 0 agar invisible, label tetap ada di data */
+        updates.push({
+          id:   edge.id,
+          font: { size: 0, strokeWidth: 0 }
+        });
+      } else {
+        /* Tampilkan kembali: kembalikan dari EDGE_COLORS lewat _relId */
+        var relId    = edge._relId;
+        var colorDef = EDGE_COLORS[relId] || EDGE_COLOR_DEFAULT;
+        updates.push({
+          id:    edge.id,
+          label: colorDef.label,
+          font: {
+            size: 9, color: colorDef.color,
+            face: 'Plus Jakarta Sans, sans-serif',
+            align: 'middle', strokeWidth: 2, strokeColor: '#FFFFFF'
+          }
+        });
+      }
+    });
+
+    if (updates.length) State.edgesDS.update(updates);
+  }
+
+  /* ──────────────────────────────────────────────────────────────────────────
+   * SETTINGS-3: Bekukan / cairkan animasi fisika Vis.js.
+   *
+   * Jika freeze=true  → physics.enabled = false (node berhenti memantul)
+   * Jika freeze=false → physics.enabled = true, jalankan stabilisasi singkat,
+   *                     lalu matikan lagi agar graf tidak meledak
+   * ────────────────────────────────────────────────────────────────────────── */
+  function applyFreezeNetwork(freeze) {
+    Settings.freezeNet = freeze;
+    if (!State.networkInst) return;
+
+    if (freeze) {
+      /* Pengguna ingin membekukan: Matikan fisika */
+      State.networkInst.setOptions({ physics: { enabled: false } });
+    } else {
+      /* Pengguna ingin mencairkan: Hidupkan fisika terus-menerus */
+      State.networkInst.setOptions({ physics: { enabled: true } });
+    }
+  }
+
+  /* ──────────────────────────────────────────────────────────────────────────
+   * SETTINGS-4: Toggle Dark Mode.
+   * ────────────────────────────────────────────────────────────────────────── */
+  function applyDarkMode(dark) {
+    Settings.darkMode = dark;
+    if (dark) {
+      document.body.classList.add('dark-mode');
+    } else {
+      document.body.classList.remove('dark-mode');
+    }
+  }
+
+  /* ──────────────────────────────────────────────────────────────────────────
+   * SETTINGS-5: Reset semua pengaturan ke default (semua Off).
+   * ────────────────────────────────────────────────────────────────────────── */
+  function resetSettings() {
+    applyHideLabels(false);
+    applyFreezeNetwork(false);
+    applyDarkMode(false);
+    syncToggleUI();
+  }
+
+  /* ──────────────────────────────────────────────────────────────────────────
+   * SETTINGS-6: Pasang semua event listener untuk elemen modal.
+   *             Dipanggil satu kali dari init().
+   * ────────────────────────────────────────────────────────────────────────── */
+  function registerSettingsModal() {
+    /* Tutup via tombol X */
+    on('#settings-close-btn', 'click', closeSettingsModal);
+
+    /* Tutup via klik overlay */
+    on('#settings-overlay', 'click', closeSettingsModal);
+
+    /* Tutup via tombol Escape */
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        var modal = document.getElementById('settings-modal');
+        if (modal && modal.classList.contains('is-open')) closeSettingsModal();
+      }
+    });
+
+    /* Toggle 1: Sembunyikan label garis */
+    var elLabels = document.getElementById('toggle-hide-labels');
+    if (elLabels) {
+      elLabels.addEventListener('change', function () {
+        applyHideLabels(elLabels.checked);
+      });
+    }
+
+    /* Toggle 2: Bekukan jaringan */
+    var elFreeze = document.getElementById('toggle-freeze-network');
+    if (elFreeze) {
+      elFreeze.addEventListener('change', function () {
+        applyFreezeNetwork(elFreeze.checked);
+      });
+    }
+
+    /* Toggle 3: Dark mode */
+    var elDark = document.getElementById('toggle-dark-mode');
+    if (elDark) {
+      elDark.addEventListener('change', function () {
+        applyDarkMode(elDark.checked);
+      });
+    }
+
+    /* Tombol Reset */
+    on('#settings-reset-btn', 'click', resetSettings);
+  }
+
+  /* =========================================================================
    *  BAGIAN 10 — HELPERS
    * ========================================================================= */
 
@@ -1225,6 +1421,7 @@
 
   function init() {
     injectDynamicStyles(); // CSS dinamis disuntikkan
+    registerSettingsModal(); // SETTINGS-6: pasang listener modal (sebelum loadData)
     loadData();            // Muat CSV
   }
 
