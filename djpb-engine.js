@@ -1,7 +1,7 @@
 /**
  * ╔══════════════════════════════════════════════════════════════════════════╗
  * ║  MESIN JAVASCRIPT — Peta Relasi dan Riwayat Hukum Perdirjen DJPb       ║
- * ║  Versi : 5.2.1  (Patch — Ghost Nodes & Cluster Optimization)          ║
+ * ║  Versi : 6.0.0  (Edge Filtering — Toggle Legenda Relasi)              ║
  * ║  Tempel : Sebagai file djpb-engine.js, lalu panggil via <script src>   ║
  * ║           tepat sebelum </body> di index.html                           ║
  * ╚══════════════════════════════════════════════════════════════════════════╝
@@ -163,7 +163,13 @@
     edgesDS:          null,       // vis.DataSet edges multi-ego aktif
     activeEgos:       [],         // MULTI-1: array ID semua ego yang aktif di kanvas
     lastSelectedEgo:  null,       // MULTI-5: ego terakhir yang diklik/dipilih user
-    visContainer:     null        // FIX-1: div#vis-canvas-container
+    visContainer:     null,       // FIX-1: div#vis-canvas-container
+    activeRels: {                 // EDGE-FILTER: tipe relasi yang aktif/tampil
+      'R-01': true,
+      'R-02': true,
+      'R-03': true,
+      'R-04': true
+    }
   };
 
   /**
@@ -754,6 +760,9 @@
     State.activeEgos.forEach(function (egoId) {
       unionNodeIds[egoId] = true;
       State.allEdgeDefs.forEach(function (e) {
+        /* EDGE-FILTER: Bypass jika relasi ini sedang dinonaktifkan di legenda */
+        if (!State.activeRels[e.idRel]) return;
+
         if (e.from === egoId || e.to === egoId) {
           unionNodeIds[e.from] = true;
           unionNodeIds[e.to]   = true;
@@ -1780,6 +1789,53 @@
   }
 
   /* =========================================================================
+   *  BAGIAN 9c — EDGE FILTERING (TOGGLE LEGENDA RELASI)
+   * =========================================================================
+   *
+   *  EDGE-FILTER-1: registerLegendFilters()
+   *    Pasang event listener 'change' via event delegation pada .legend.
+   *    Saat checkbox .legend-toggle berubah:
+   *      1. Update State.activeRels[relId] = checked
+   *      2. Panggil renderAllEgos() jika State.activeEgos tidak kosong.
+   *
+   *  Perilaku:
+   *    - Toggle OFF → edge bertipe relId dan node eksklusif relasi itu
+   *      hilang dari kanvas karena tidak masuk unionNodeIds/unionEdgeDefs.
+   *    - Node Ego utama TIDAK pernah hilang karena unionNodeIds[egoId]=true
+   *      diset SEBELUM loop filter.
+   *    - resetSettings() juga mereset activeRels ke semua true + sync UI.
+   * ========================================================================= */
+
+  /**
+   * EDGE-FILTER-1: Pasang listener change pada checkbox di .legend .legend-toggle.
+   * Menggunakan event delegation pada elemen .legend sehingga cukup satu listener.
+   */
+  function registerLegendFilters() {
+    var legendEl = document.querySelector('.legend');
+    if (!legendEl) return;
+
+    legendEl.addEventListener('change', function (e) {
+      /* Tangani HANYA checkbox di dalam .legend-toggle */
+      if (!e.target || e.target.type !== 'checkbox') return;
+      var parentLabel = e.target.closest('.legend-toggle');
+      if (!parentLabel) return;
+
+      var relId   = e.target.value;    /* 'R-01' | 'R-02' | 'R-03' | 'R-04' */
+      var checked = e.target.checked;
+
+      /* Update State.activeRels */
+      if (Object.prototype.hasOwnProperty.call(State.activeRels, relId)) {
+        State.activeRels[relId] = checked;
+      }
+
+      /* Re-render graf hanya jika ada ego aktif di kanvas */
+      if (State.activeEgos.length > 0) {
+        renderAllEgos();
+      }
+    });
+  }
+
+  /* =========================================================================
    *  BAGIAN 9b — SETTINGS MODAL
    * =========================================================================
    *
@@ -1908,12 +1964,29 @@
 
   /* ──────────────────────────────────────────────────────────────────────────
    * SETTINGS-5: Reset semua pengaturan ke default (semua Off).
+   * EDGE-FILTER: Juga reset activeRels ke semua true dan sinkronkan checkbox.
    * ────────────────────────────────────────────────────────────────────────── */
   function resetSettings() {
     applyHideLabels(false);
     applyFreezeNetwork(false);
     applyDarkMode(false);
     syncToggleUI();
+
+    /* EDGE-FILTER: Kembalikan semua tipe relasi ke aktif */
+    State.activeRels['R-01'] = true;
+    State.activeRels['R-02'] = true;
+    State.activeRels['R-03'] = true;
+    State.activeRels['R-04'] = true;
+
+    /* Sinkronkan checkbox legenda ke kondisi checked */
+    document.querySelectorAll('.legend-toggle input[type="checkbox"]').forEach(function (cb) {
+      cb.checked = true;
+    });
+
+    /* Re-render jika ada ego aktif agar perubahan filter terefleksi */
+    if (State.activeEgos.length > 0) {
+      renderAllEgos();
+    }
   }
 
   /* ──────────────────────────────────────────────────────────────────────────
@@ -1995,9 +2068,10 @@
    * ========================================================================= */
 
   function init() {
-    injectDynamicStyles(); // CSS dinamis disuntikkan
-    registerSettingsModal(); // SETTINGS-6: pasang listener modal (sebelum loadData)
-    loadData();            // Muat CSV
+    injectDynamicStyles();    // CSS dinamis disuntikkan
+    registerSettingsModal();  // SETTINGS-6: pasang listener modal (sebelum loadData)
+    registerLegendFilters();  // EDGE-FILTER-1: pasang listener toggle legenda
+    loadData();               // Muat CSV
   }
 
   if (document.readyState === 'loading') {
