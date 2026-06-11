@@ -1579,6 +1579,182 @@
       color: var(--djpb-sky);
     }
 
+
+    /* ═══════════════════════════════════════════════════════════════
+       PANDUAN MODAL
+       ═══════════════════════════════════════════════════════════════ */
+
+    /* Modal panduan lebih lebar dari settings, lebih sempit dari referensi */
+    #panduan-modal .modal-box {
+      max-width: 560px;
+      max-height: calc(100vh - 48px);
+    }
+
+    /* Body panduan: scroll jika konten panjang */
+    #panduan-modal .modal-body {
+      padding: 20px 20px 16px;
+      gap: 0;
+      overflow-y: auto;
+      max-height: calc(100vh - 180px);
+    }
+
+    /* ── Grup seksi panduan ── */
+    .panduan-section {
+      margin-bottom: 20px;
+    }
+
+    .panduan-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .panduan-section-title {
+      font-size: 9.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--djpb-mid);
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+      border-bottom: 1.5px solid var(--djpb-pale);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .panduan-section-title svg {
+      width: 13px;
+      height: 13px;
+      color: var(--djpb-accent);
+      flex-shrink: 0;
+    }
+
+    /* ── List item panduan ── */
+    .panduan-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .panduan-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      font-size: 11.5px;
+      color: var(--text-secondary);
+      line-height: 1.55;
+    }
+
+    /* Bullet titik warna aksen */
+    .panduan-list li::before {
+      content: '';
+      display: block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--djpb-accent);
+      flex-shrink: 0;
+      margin-top: 5px;
+    }
+
+    /* Teks judul dalam item panduan */
+    .panduan-list li strong {
+      color: var(--text-primary);
+      font-weight: 700;
+    }
+
+    /* ── Ikon inline di dalam teks paragraf ── */
+    .inline-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      background: var(--djpb-pale);
+      border: 1px solid rgba(44,116,179,.25);
+      color: var(--djpb-mid);
+      vertical-align: middle;
+      margin: 0 2px;
+      flex-shrink: 0;
+      position: relative;
+      top: -1px;
+    }
+
+    .inline-icon svg {
+      width: 11px;
+      height: 11px;
+    }
+
+    /* ── Chip highlight di dalam panduan ── */
+    .panduan-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 1px 7px;
+      border-radius: 12px;
+      font-size: 10px;
+      font-weight: 700;
+      background: var(--djpb-pale);
+      color: var(--djpb-mid);
+      border: 1px solid rgba(44,116,179,.2);
+      vertical-align: middle;
+      margin: 0 1px;
+    }
+
+    /* ── Divider ringan antar seksi ── */
+    .panduan-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 16px 0;
+    }
+
+    /* Footer panduan: catatan versi */
+    .panduan-footer-version {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .panduan-footer-version svg {
+      width: 11px;
+      height: 11px;
+      flex-shrink: 0;
+    }
+
+    /* ── Dark Mode overrides untuk Panduan Modal ── */
+    body.dark-mode .panduan-section-title {
+      color: var(--djpb-sky);
+      border-bottom-color: var(--djpb-pale);
+    }
+
+    body.dark-mode .panduan-list li::before {
+      background: var(--djpb-sky);
+    }
+
+    body.dark-mode .inline-icon {
+      background: var(--djpb-pale);
+      border-color: rgba(74,158,219,.3);
+      color: var(--djpb-sky);
+    }
+
+    body.dark-mode .panduan-chip {
+      background: var(--djpb-pale);
+      color: var(--djpb-sky);
+      border-color: rgba(74,158,219,.3);
+    }
+
+    body.dark-mode .panduan-footer-version {
+      color: var(--text-muted);
+    }
+
+    /* Highlight tombol panduan saat dark mode aktif */
+    body.dark-mode #panduan-btn {
+      background: rgba(255,255,255,.06);
+    }
+
   </style>
 </head>
 <body>
@@ -1598,9 +1774,17 @@
     </div>
 
     <div class="header-meta">
-      <div class="header-badge">DJPb</div>
-      <div class="header-badge beta">Beta v0.1</div>
+      <div class="header-badge beta">Beta Version</div>
     </div>
+
+    <!-- Tombol Panduan Penggunaan -->
+    <button class="toolbar-btn" id="panduan-btn" title="Panduan Penggunaan">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+        <line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+    </button>
 
     <div class="header-divider"></div>
 
@@ -1646,7 +1830,7 @@
 
       <div class="map-toolbar">
         <div class="map-toolbar-group">
-          <button class="map-tool-btn active" title="Pilih (S)">
+          <button class="map-tool-btn active" title="Pilih">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M5 3l14 9-7 1-3 7z"/>
             </svg>
@@ -2088,6 +2272,222 @@
 
   </div><!-- /modal-box -->
 </div><!-- /referensi-modal -->
+
+<!-- ═══════════════════════════════════════════════════════════════
+     PANDUAN MODAL — Panduan Penggunaan Aplikasi
+     ═══════════════════════════════════════════════════════════════ -->
+<div id="panduan-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="panduan-modal-title">
+  <div class="modal-overlay" id="panduan-overlay"></div>
+  <div class="modal-box">
+
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <div class="modal-title-wrap">
+        <div class="modal-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </div>
+        <div>
+          <div class="modal-title" id="panduan-modal-title">Panduan Penggunaan</div>
+          <div class="modal-subtitle">Peta Relasi dan Riwayat Hukum Perdirjen DJPb</div>
+        </div>
+      </div>
+      <button class="modal-close-btn" id="panduan-close-btn" title="Tutup">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="modal-body">
+
+      <!-- ── 1. Navigasi Peta ── -->
+      <div class="panduan-section">
+        <div class="panduan-section-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+          </svg>
+          Navigasi Peta
+        </div>
+        <ul class="panduan-list">
+          <li>
+            <span><strong>Geser (Pan):</strong> Tahan tombol kiri mouse lalu seret untuk memindahkan pandangan ke seluruh penjuru peta jaringan.</span>
+          </li>
+          <li>
+            <span><strong>Perbesar / Perkecil (Zoom):</strong> Gunakan tombol
+              <span class="inline-icon" title="Zoom In">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+              </span>
+              dan
+              <span class="inline-icon" title="Zoom Out">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+              </span>
+              di toolbar peta, atau putar roda mouse di atas kanvas.
+            </span>
+          </li>
+          <li>
+            <span><strong>Fit ke Layar:</strong> Klik tombol
+              <span class="inline-icon" title="Fit ke Layar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+              </span>
+              untuk menyesuaikan semua node agar muat di layar sekaligus.
+            </span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="panduan-divider"></div>
+
+      <!-- ── 2. Interaksi Node ── -->
+      <div class="panduan-section">
+        <div class="panduan-section-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3H6a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3h12a3 3 0 0 0 3-3 3 3 0 0 0-3-3z"/>
+          </svg>
+          Interaksi dengan Node
+        </div>
+        <ul class="panduan-list">
+          <li>
+            <span><strong>Klik sekali</strong> pada sebuah titik/node di peta untuk menampilkan detail lengkap peraturan tersebut di Panel Detail sebelah kanan, termasuk identitas, relasi, dan riwayat perubahan.</span>
+          </li>
+          <li>
+            <span><strong>Klik Ganda (Double Click)</strong> pada node mana pun untuk menambahkannya sebagai <span class="panduan-chip">Ego Baru</span> di peta — node tersebut beserta seluruh jaringannya akan ditampilkan sekaligus (Multi-Ego Union).</span>
+          </li>
+          <li>
+            <span><strong>Kluster Biru</strong>
+              <span class="inline-icon" style="background:#3182CE;border-color:#2B6CB0;">
+                <svg viewBox="0 0 24 24" fill="white" stroke="none"><circle cx="12" cy="12" r="9"/></svg>
+              </span>
+              menandai sekumpulan Dasar Hukum (R-01) yang dikompresi. <strong>Klik Ganda</strong> pada kluster biru untuk membuka dan menampilkan semua node di dalamnya.
+            </span>
+          </li>
+          <li>
+            <span><strong>Cross-Highlighting:</strong> Saat kursor diarahkan ke baris Riwayat Perubahan atau chip Relasi di Panel Detail, node yang bersangkutan di kanvas akan <strong>menyala warna emas</strong> — memudahkan identifikasi posisinya di peta.</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="panduan-divider"></div>
+
+      <!-- ── 3. Pencarian & Referensi ── -->
+      <div class="panduan-section">
+        <div class="panduan-section-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          Pencarian &amp; Referensi
+        </div>
+        <ul class="panduan-list">
+          <li>
+            <span><strong>Kotak Pencarian:</strong> Ketik nomor Perdirjen (misal: <span class="panduan-chip">PER-1/PB/2024</span>) di kotak pencarian. Dropdown otomatis muncul menampilkan daftar cocok — klik item atau tekan <span class="panduan-chip">Enter</span> untuk memuat peta.</span>
+          </li>
+          <li>
+            <span><strong>Filter Tahun:</strong> Gunakan dropdown tahun di sebelah kiri kotak pencarian untuk mempersempit daftar autocomplete hanya ke tahun yang diinginkan.</span>
+          </li>
+          <li>
+            <span><strong>Referensi Peraturan</strong>
+              <span class="inline-icon" title="Referensi Peraturan">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
+              </span>
+              di toolbar: buka katalog seluruh Perdirjen, lengkap dengan filter tahun. Klik baris mana pun di katalog untuk langsung membuka petanya.
+            </span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="panduan-divider"></div>
+
+      <!-- ── 4. Panel Detail (Kanan) ── -->
+      <div class="panduan-section">
+        <div class="panduan-section-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/>
+          </svg>
+          Panel Detail (Kanan)
+        </div>
+        <ul class="panduan-list">
+          <li>
+            <span><strong>Identitas Dokumen:</strong> Menampilkan tipe, status, nomor, tahun, tanggal, instansi, dan judul peraturan yang sedang dipilih.</span>
+          </li>
+          <li>
+            <span><strong>Relasi Terhubung:</strong> Menampilkan chip-chip peraturan yang menjadi Dasar Hukum (diklik → buka peta baru) dan peraturan yang Diubah/Dicabut. Arahkan kursor ke chip untuk menyalakan node di kanvas (<strong>Cross-Highlighting</strong>).</span>
+          </li>
+          <li>
+            <span><strong>Riwayat Perubahan:</strong> Tabel riwayat lengkap lintas relasi (kecuali Mengingat). Hover baris untuk menyalakan node bersangkutan, klik baris untuk membuka petanya.</span>
+          </li>
+          <li>
+            <span><strong>Fokus di Peta</strong>
+              <span class="inline-icon" title="Fokus di Peta">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              </span>
+              : Pusatkan pandangan kanvas ke node terakhir yang dipilih dengan zoom yang diperbesar.
+            </span>
+          </li>
+          <li>
+            <span><strong>Salin Detail Perdirjen</strong>
+              <span class="inline-icon" title="Salin Detail">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+              </span>
+              : Salin seluruh detail (identitas, relasi, riwayat) sebagai teks terformat ke clipboard.
+            </span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="panduan-divider"></div>
+
+      <!-- ── 5. Pengaturan & Alat ── -->
+      <div class="panduan-section">
+        <div class="panduan-section-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+          Pengaturan &amp; Alat
+        </div>
+        <ul class="panduan-list">
+          <li>
+            <span><strong>Pengaturan</strong>
+              <span class="inline-icon" title="Pengaturan">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              </span>
+              : Buka panel pengaturan tampilan. Tersedia tiga sakelar — <span class="panduan-chip">Mode Gelap</span> untuk tema dark, <span class="panduan-chip">Bekukan Jaringan</span> untuk menghentikan animasi fisika, dan <span class="panduan-chip">Sembunyikan Label Garis</span> untuk menyembunyikan teks di atas relasi.
+            </span>
+          </li>
+          <li>
+            <span><strong>Muat Data</strong>
+              <span class="inline-icon" title="Muat Data">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.36-3.36L23 10M1 14l5.13 4.36A9 9 0 0 0 20.49 15"/></svg>
+              </span>
+              : Muat ulang data dari file CSV dan <strong>reset seluruh tampilan</strong> ke kondisi awal. Gunakan jika data di file sumber diperbarui.
+            </span>
+          </li>
+          <li>
+            <span><strong>Toggle Sakelar Legenda Relasi:</strong> Di kotak Legenda (pojok kiri bawah peta), setiap jenis relasi memiliki sakelar sendiri. Matikan sakelar untuk menyembunyikan semua garis dan node eksklusif bertipe relasi tersebut dari kanvas secara instan.</span>
+          </li>
+        </ul>
+      </div>
+
+    </div><!-- /modal-body -->
+
+    <!-- Modal Footer -->
+    <div class="modal-footer">
+      <div class="panduan-footer-version">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+        </svg>
+        Versi 8.0.0 — DJPb Knowledge Management System
+      </div>
+      <button class="modal-close-btn" id="panduan-close-btn-footer" title="Tutup Panduan" style="width:auto;padding:0 14px;font-size:11px;font-weight:600;font-family:var(--font-body);color:var(--text-secondary);">
+        Tutup
+      </button>
+    </div>
+
+  </div><!-- /modal-box -->
+</div><!-- /panduan-modal -->
 
 <script src="djpb-engine.js"></script>
 

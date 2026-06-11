@@ -1,56 +1,49 @@
 /**
  * ╔══════════════════════════════════════════════════════════════════════════╗
  * ║  MESIN JAVASCRIPT — Peta Relasi dan Riwayat Hukum Perdirjen DJPb       ║
- * ║  Versi : 7.0.0  (Modal Referensi Katalog Perdirjen)                    ║
+ * ║  Versi : 8.0.0  (Panduan Penggunaan — Modal Onboarding)                ║
  * ║  Tempel : Sebagai file djpb-engine.js, lalu panggil via <script src>   ║
  * ║           tepat sebelum </body> di index.html                           ║
  * ╚══════════════════════════════════════════════════════════════════════════╝
  *
- * ── FITUR BARU (v7.0.0) ───────────────────────────────────────────────────
- *  REF-1: Tombol "Filter" di header diubah menjadi "Referensi Peraturan"
- *         dengan ikon clipboard. Event listener lama (fokus ke search input)
- *         diganti dengan openReferensiModal().
+ * ── FITUR BARU (v8.0.0) ───────────────────────────────────────────────────
+ * PANDUAN-1: Modal Panduan Penggunaan (#panduan-modal).
+ *            Tombol ? (#panduan-btn) di header memicu modal informatif yang
+ *            mencakup: Navigasi Peta, Interaksi Node, Pencarian & Referensi,
+ *            Panel Detail, dan Pengaturan & Alat.
+ *            Konten kaya dengan ikon SVG inline (.inline-icon) di dalam teks.
  *
- *  REF-2: openReferensiModal()
- *         Membuka #referensi-modal, mengisi dropdown tahun secara dinamis
- *         dari masterMap (hanya T-06, tahun 2014-2026, descending), lalu
- *         memanggil renderReferensiTable('Semua Tahun').
+ * PANDUAN-2: Logika Escape key direfaktor menjadi satu handler terpusat
+ *            (handleGlobalEscape) yang memeriksa ketiga modal secara aman —
+ *            hanya menutup modal yang sedang terbuka, tanpa konflik.
  *
- *  REF-3: closeReferensiModal()
- *         Menutup modal dan mengembalikan overflow body ke default.
+ * ── FITUR SEBELUMNYA (v7.1.0) ─────────────────────────────────────────────
+ * UX-3: Cross-Highlighting via toggleNodeHighlight().
  *
- *  REF-4: renderReferensiTable(tahunFilter)
- *         Memfilter masterMap untuk T-06 dan tahun 2014-2026.
- *         Mengisi #referensi-tbody dengan baris data.
- *         Setiap <tr> memiliki data-id berisi ID Baku dan cursor pointer.
- *
- *  REF-5: Event delegation pada #referensi-tbody.
- *         Klik baris → renderEgoNetwork(id) + closeReferensiModal().
- *
- *  REF-6: registerReferensiModal()
- *         Pasang semua listener modal: tombol X, overlay, change dropdown.
+ * ── FITUR SEBELUMNYA (v7.0.0) ─────────────────────────────────────────────
+ * REF-1..6: Modal Referensi Katalog Perdirjen.
  *
  * ── FITUR SEBELUMNYA (v6.0.0) ─────────────────────────────────────────────
- *  EDGE-FILTER: Toggle checkbox Legenda R-01 s.d R-04.
+ * EDGE-FILTER: Toggle checkbox Legenda R-01 s.d R-04.
  *
  * ── FITUR SEBELUMNYA (v5.2.x) ─────────────────────────────────────────────
- *  CLUSTER-1..3: Smart Clustering Vis.js + fix Ghost Node via .slice().
+ * CLUSTER-1..3: Smart Clustering Vis.js + fix Ghost Node via .slice().
  *
  * ── FITUR SEBELUMNYA (v5.1.0) ─────────────────────────────────────────────
- *  Custom Autocomplete Dropdown (T-06) menggantikan <datalist>.
+ * Custom Autocomplete Dropdown (T-06).
  *
  * ── FITUR SEBELUMNYA (v5.0.0) ─────────────────────────────────────────────
- *  MULTI-1..5: Multi-Ego Network (append node, chip filter).
+ * MULTI-1..5: Multi-Ego Network.
  *
  * ── FITUR SEBELUMNYA (v4.0.0) ─────────────────────────────────────────────
- *  SETTINGS-1..6: Modal Pengaturan (labels, freeze, dark mode).
+ * SETTINGS-1..6: Modal Pengaturan (labels, freeze, dark mode).
  */
 
 (function () {
   'use strict';
 
   /* =========================================================================
-   *  BAGIAN 1 — KONSTANTA & KONFIGURASI ATURAN BISNIS
+   * BAGIAN 1 — KONSTANTA & KONFIGURASI ATURAN BISNIS
    * ========================================================================= */
 
   /** Warna NODE per ID Tipe */
@@ -80,7 +73,7 @@
   /**
    * Terjemahan ID Tipe → nama panjang + CSS class badge
    * FIX-6: Nama panjang digunakan di panel detail agar pengguna tidak melihat
-   *        kode mesin seperti "T-06".
+   * kode mesin seperti "T-06".
    */
   var TYPE_META = {
     'T-01': { name: 'Undang-Undang (UU)',                      css: 'uu'        },
@@ -116,7 +109,7 @@
   var YEAR_MAX = 2026;
 
   /* =========================================================================
-   *  BAGIAN 2 — STATE TERPUSAT
+   * BAGIAN 2 — STATE TERPUSAT
    * ========================================================================= */
 
   var State = {
@@ -149,15 +142,15 @@
   };
 
   /* =========================================================================
-   *  BAGIAN 3 — CSS DINAMIS (Injeksi Style)
+   * BAGIAN 3 — CSS DINAMIS (Injeksi Style)
    * =========================================================================
    *
-   *  POIN-11: .detail-card-body dan .riwayat-table-wrap mendapat
-   *           max-height: 250px; overflow-y: auto; overflow-x: auto;
-   *           agar setiap seksi dapat di-scroll secara independen.
+   * POIN-11: .detail-card-body dan .riwayat-table-wrap mendapat
+   * max-height: 250px; overflow-y: auto; overflow-x: auto;
+   * agar setiap seksi dapat di-scroll secara independen.
    *
-   *  FIX-4: Menyuntikkan fix scroll + layout ke #detail-panel.
-   *  FIX-1: z-index untuk #vis-canvas-container.
+   * FIX-4: Menyuntikkan fix scroll + layout ke #detail-panel.
+   * FIX-1: z-index untuk #vis-canvas-container.
    */
   function injectDynamicStyles() {
     if (document.getElementById('djpb-dynamic-styles')) return; // idempoten
@@ -318,7 +311,7 @@
   }
 
   /* =========================================================================
-   *  BAGIAN 4 — PEMUATAN DATA CSV (PapaParse)
+   * BAGIAN 4 — PEMUATAN DATA CSV (PapaParse)
    * ========================================================================= */
 
   /**
@@ -405,17 +398,17 @@
   }
 
   /* =========================================================================
-   *  BAGIAN 5 — UI PENCARIAN DINAMIS (Dropdown Tahun + Custom Autocomplete)
+   * BAGIAN 5 — UI PENCARIAN DINAMIS (Dropdown Tahun + Custom Autocomplete)
    * =========================================================================
    *
-   *  Mengubah .map-search-bar menjadi:
-   *  [🔍] [Dropdown Tahun 2014–2026] | [Input Pencarian + Custom Dropdown T-06]
+   * Mengubah .map-search-bar menjadi:
+   * [🔍] [Dropdown Tahun 2014–2026] | [Input Pencarian + Custom Dropdown T-06]
    *
-   *  FIX-2: Hanya tahun dalam rentang YEAR_MIN–YEAR_MAX yang ditampilkan.
-   *  FIX-3: Dropdown hanya berisi T-06, nilai = Penulisan Asli murni.
-   *  5.1  : <datalist> diganti Custom Autocomplete Dropdown (div kustom) agar
-   *         tidak hilang saat mouse bergeser. Dropdown hilang hanya saat:
-   *         (a) user memilih item, (b) user klik di luar, (c) user tekan Escape.
+   * FIX-2: Hanya tahun dalam rentang YEAR_MIN–YEAR_MAX yang ditampilkan.
+   * FIX-3: Dropdown hanya berisi T-06, nilai = Penulisan Asli murni.
+   * 5.1  : <datalist> diganti Custom Autocomplete Dropdown (div kustom) agar
+   * tidak hilang saat mouse bergeser. Dropdown hilang hanya saat:
+   * (a) user memilih item, (b) user klik di luar, (c) user tekan Escape.
    */
   function buildSearchUI() {
     var bar = document.querySelector('.map-search-bar');
@@ -594,10 +587,10 @@
    * Mengurai nilai input → ID Aturan Baku (string kunci di masterMap).
    *
    * FIX-3: Urutan pencocokan yang diperbarui:
-   *  1. Cocokkan tepat dengan Penulisan Asli (T-06 diutamakan, lalu semua tipe)
-   *  2. Cocokkan tepat dengan ID Baku
-   *  3. Substring case-insensitive pada Penulisan Asli T-06
-   *  4. Substring case-insensitive pada ID Baku atau Penulisan Asli semua tipe
+   * 1. Cocokkan tepat dengan Penulisan Asli (T-06 diutamakan, lalu semua tipe)
+   * 2. Cocokkan tepat dengan ID Baku
+   * 3. Substring case-insensitive pada Penulisan Asli T-06
+   * 4. Substring case-insensitive pada ID Baku atau Penulisan Asli semua tipe
    *
    * @param {string} raw
    * @returns {string|null} ID Baku atau null bila tidak ditemukan
@@ -644,22 +637,22 @@
   }
 
   /* =========================================================================
-   *  BAGIAN 6 — MULTI-EGO NETWORK RENDERER
+   * BAGIAN 6 — MULTI-EGO NETWORK RENDERER
    * =========================================================================
    *
-   *  MULTI-2: renderEgoNetwork(newEgoId)
-   *    - Cek apakah newEgoId sudah ada di State.activeEgos; jika belum, push.
-   *    - Iterasi SEMUA ID di State.activeEgos untuk mengumpulkan node & edge
-   *      Degree-1 dari setiap ego secara union (tanpa duplikat).
-   *    - Node yang ID-nya ada di State.activeEgos mendapat gaya isEgo.
+   * MULTI-2: renderEgoNetwork(newEgoId)
+   * - Cek apakah newEgoId sudah ada di State.activeEgos; jika belum, push.
+   * - Iterasi SEMUA ID di State.activeEgos untuk mengumpulkan node & edge
+   * Degree-1 dari setiap ego secara union (tanpa duplikat).
+   * - Node yang ID-nya ada di State.activeEgos mendapat gaya isEgo.
    *
-   *  MULTI-3: renderActiveFilterChips()
-   *    - Render chip untuk tiap ego aktif di #active-filters-container.
-   *    - Tombol × menghapus satu ego dan memanggil ulang renderAllEgos().
+   * MULTI-3: renderActiveFilterChips()
+   * - Render chip untuk tiap ego aktif di #active-filters-container.
+   * - Tombol × menghapus satu ego dan memanggil ulang renderAllEgos().
    *
-   *  MULTI-4: renderAllEgos()
-   *    - Fungsi internal yang membaca State.activeEgos dan merender ulang
-   *      seluruh grafik dari scratch agar gaya isEgo konsisten.
+   * MULTI-4: renderAllEgos()
+   * - Fungsi internal yang membaca State.activeEgos dan merender ulang
+   * seluruh grafik dari scratch agar gaya isEgo konsisten.
    * ========================================================================= */
 
   /**
@@ -738,14 +731,14 @@
     /* ── 1b. CLUSTER-1: Identifikasi Leaf R-01 per ego ── */
     /*
      * Untuk setiap egoId, kita cari node yang:
-     *  a) Merupakan TARGET dari edge R-01 yang berasal dari egoId (ego → target via R-01)
-     *  b) Merupakan Leaf Node: hanya memiliki 1 edge di dalam unionEdgeDefs
-     *     (derajat = 1, hanya terhubung ke ego tersebut)
+     * a) Merupakan TARGET dari edge R-01 yang berasal dari egoId (ego → target via R-01)
+     * b) Merupakan Leaf Node: hanya memiliki 1 edge di dalam unionEdgeDefs
+     * (derajat = 1, hanya terhubung ke ego tersebut)
      *
      * Langkah:
-     *  1. Hitung degree setiap node di dalam graf yang akan dirender
-     *  2. Untuk setiap ego, cari node target R-01 yang degree-nya = 1
-     *  3. Simpan mapping: nodeId → { isLeafR01: true, parentEgo: egoId }
+     * 1. Hitung degree setiap node di dalam graf yang akan dirender
+     * 2. Untuk setiap ego, cari node target R-01 yang degree-nya = 1
+     * 3. Simpan mapping: nodeId → { isLeafR01: true, parentEgo: egoId }
      */
 
     /* Hitung degree setiap node berdasarkan unionEdgeDefs */
@@ -914,17 +907,17 @@
   }
 
   /* =========================================================================
-   *  BAGIAN 6b — SISTEM KLUSTER (CLUSTER-2)
+   * BAGIAN 6b — SISTEM KLUSTER (CLUSTER-2)
    * =========================================================================
    *
-   *  applyClustering() dipanggil setelah fit() selesai di renderAllEgos().
-   *  Untuk setiap egoId di State.activeEgos, fungsi ini:
-   *    1. Menggunakan State.networkInst.cluster() dengan joinCondition yang
-   *       mencocokkan isLeafR01 === true dan parentEgo === egoId.
-   *    2. Di processProperties, menghitung jumlah child nodes:
-   *       - Jika < 3 : batalkan kluster (return null agar Vis.js tidak membuat cluster)
-   *       - Jika >= 3: set label kluster dan properti tampilan
-   *    3. clusterNodeProperties mengatur desain visual node kluster.
+   * applyClustering() dipanggil setelah fit() selesai di renderAllEgos().
+   * Untuk setiap egoId di State.activeEgos, fungsi ini:
+   * 1. Menggunakan State.networkInst.cluster() dengan joinCondition yang
+   * mencocokkan isLeafR01 === true dan parentEgo === egoId.
+   * 2. Di processProperties, menghitung jumlah child nodes:
+   * - Jika < 3 : batalkan kluster (return null agar Vis.js tidak membuat cluster)
+   * - Jika >= 3: set label kluster dan properti tampilan
+   * 3. clusterNodeProperties mengatur desain visual node kluster.
    * ========================================================================= */
 
   /**
@@ -952,8 +945,8 @@
         /**
          * processProperties: dipanggil dengan daftar child nodes yang
          * memenuhi joinCondition. Gunakan ini untuk:
-         *  - Memutuskan apakah kluster benar-benar dibuat (< 3 → null)
-         *  - Mengatur label dan properti kluster jika dibuat
+         * - Memutuskan apakah kluster benar-benar dibuat (< 3 → null)
+         * - Mengatur label dan properti kluster jika dibuat
          *
          * @param {Object} clusterOptions  — properti kluster default dari Vis.js
          * @param {Array}  childNodes      — array objek node yang masuk kluster
@@ -1123,7 +1116,7 @@
    * Menginisialisasi vis.Network (dipanggil sekali saat ego-network pertama dirender).
    *
    * FIX-1: Vis.Network di-attach ke #vis-canvas-container yang dibuat secara
-   *        dinamis di dalam #network-map.
+   * dinamis di dalam #network-map.
    */
   function initVisNetwork(nodesArray, edgesArray) {
     State.nodesDS = new vis.DataSet(nodesArray);
@@ -1191,15 +1184,15 @@
   }
 
   /* =========================================================================
-   *  BAGIAN 7 — EVENT LISTENERS
+   * BAGIAN 7 — EVENT LISTENERS
    * ========================================================================= */
 
   /**
    * Event Vis.js: klik node, deselect, zoom, doubleClick.
    *
    * CLUSTER-3: doubleClick diperbarui untuk menangani node kluster:
-   *   - Jika kluster → openCluster() + applyActiveSettings()
-   *   - Jika bukan kluster → renderEgoNetwork() seperti sebelumnya
+   * - Jika kluster → openCluster() + applyActiveSettings()
+   * - Jika bukan kluster → renderEgoNetwork() seperti sebelumnya
    */
   function registerNetworkEvents() {
     var net = State.networkInst;
@@ -1231,9 +1224,16 @@
       if (!net.getSelectedNodes().length) resetDetailPanel();
     });
 
-    /* Zoom → update status bar */
+    /* Zoom → update status bar (Saat scroll manual) */
     net.on('zoom', function (params) {
       var pct    = Math.round(params.scale * 100);
+      var zoomEl = document.querySelector('.map-stat-chip:last-child span');
+      if (zoomEl) zoomEl.textContent = pct + '%';
+    });
+
+    /* Zoom → update status bar (Saat animasi JS seperti Fit / Fokus selesai) */
+    net.on('animationFinished', function () {
+      var pct    = Math.round(net.getScale() * 100);
       var zoomEl = document.querySelector('.map-stat-chip:last-child span');
       if (zoomEl) zoomEl.textContent = pct + '%';
     });
@@ -1242,8 +1242,8 @@
      * CLUSTER-3: Dobel-klik node.
      *
      * Cek apakah node yang diklik adalah kluster:
-     *  - YA  : buka kluster, lalu terapkan kembali setting aktif
-     *  - TIDAK: tambahkan sebagai ego baru (deep-link via kanvas)
+     * - YA  : buka kluster, lalu terapkan kembali setting aktif
+     * - TIDAK: tambahkan sebagai ego baru (deep-link via kanvas)
      */
     net.on('doubleClick', function (params) {
       if (!params.nodes.length) return;
@@ -1328,14 +1328,14 @@
   }
 
   /* =========================================================================
-   *  BAGIAN 8 — UPDATE PANEL DETAIL & DEEP LINKING
+   * BAGIAN 8 — UPDATE PANEL DETAIL & DEEP LINKING
    * ========================================================================= */
 
   /**
    * Memperbarui seluruh konten #detail-panel.
    *
    * POIN-9: Mengekstrak Tanggal Berlaku, Instansi Penerbit, dan Tempat Terbit
-   *         dari masterMap dan mengisinya ke ID DOM baru.
+   * dari masterMap dan mengisinya ke ID DOM baru.
    */
   function updateDetailPanel(nodeId, data, connectedEdges) {
     if (!data) return;
@@ -1390,6 +1390,40 @@
   }
 
   /**
+   * UX-3: Menyalakan/mematikan highlight visual pada node Vis.js
+   */
+  function toggleNodeHighlight(nodeId, isHover) {
+    if (!State.nodesDS || !State.nodesDS.get(nodeId)) return;
+
+    if (isHover) {
+      /* Saat Mouse Masuk: Jadikan node menyala warna Emas/Kuning */
+      State.nodesDS.update({
+        id: nodeId,
+        borderWidth: 5,
+        shadow: { size: 18, color: 'rgba(214, 158, 46, 0.85)' },
+        color: { border: '#D69E2E' }
+      });
+    } else {
+      /* Saat Mouse Keluar: Kembalikan ke warna asli */
+      var row = State.masterMap.get(nodeId);
+      var idTipe = row ? trim(row['ID Tipe']) : '';
+      var colorDef = NODE_COLORS[idTipe] || NODE_COLOR_DEFAULT;
+      var isEgo = State.activeEgos.indexOf(nodeId) !== -1;
+
+      State.nodesDS.update({
+        id: nodeId,
+        borderWidth: isEgo ? 3 : 1.5,
+        shadow: { 
+          enabled: true, 
+          size: isEgo ? 14 : 6, 
+          color: isEgo ? 'rgba(44,116,179,0.35)' : 'rgba(0,0,0,0.18)' 
+        },
+        color: { border: colorDef.border }
+      });
+    }
+  }
+
+  /**
    * Mengisi chip relasi (dasar hukum & aksi).
    * FIX-6: Klik chip → deep-link ke renderEgoNetwork().
    */
@@ -1429,13 +1463,20 @@
     aksiEl.innerHTML  = aksiHTML  ||
       '<span style="font-size:10px;color:var(--text-muted);">—</span>';
 
-    /* FIX-6: Pasang deep-link pada setiap chip */
+    /* FIX-6 & UX-3: Pasang deep-link dan Cross-Highlighting pada setiap chip */
     [dasarEl, aksiEl].forEach(function (container) {
       container.querySelectorAll('.relasi-chip[data-target-id]').forEach(function (chip) {
-        chip.addEventListener('click', function () {
-          var tid = chip.getAttribute('data-target-id');
-          if (tid) renderEgoNetwork(tid);
-        });
+        var tid = chip.getAttribute('data-target-id');
+        if (!tid) return;
+
+        /* 1. Event Klik (Deep-link) */
+        chip.addEventListener('click', function () { renderEgoNetwork(tid); });
+        
+        /* 2. Event Mouse Masuk (Menyala) */
+        chip.addEventListener('mouseenter', function () { toggleNodeHighlight(tid, true); });
+        
+        /* 3. Event Mouse Keluar (Mati) */
+        chip.addEventListener('mouseleave', function () { toggleNodeHighlight(tid, false); });
       });
     });
   }
@@ -1487,12 +1528,19 @@
 
     tbody.innerHTML = html;
 
-    /* FIX-6: Pasang deep-link pada setiap baris tabel riwayat */
+    /* FIX-6 & UX-3: Pasang deep-link dan Cross-Highlighting pada tabel riwayat */
     tbody.querySelectorAll('tr[data-target-id]').forEach(function (tr) {
-      tr.addEventListener('click', function () {
-        var tid = tr.getAttribute('data-target-id');
-        if (tid) renderEgoNetwork(tid);
-      });
+      var tid = tr.getAttribute('data-target-id');
+      if (!tid) return;
+
+      /* 1. Event Klik (Deep-link) */
+      tr.addEventListener('click', function () { renderEgoNetwork(tid); });
+      
+      /* 2. Event Mouse Masuk (Menyala) */
+      tr.addEventListener('mouseenter', function () { toggleNodeHighlight(tid, true); });
+      
+      /* 3. Event Mouse Keluar (Mati) */
+      tr.addEventListener('mouseleave', function () { toggleNodeHighlight(tid, false); });
     });
   }
 
@@ -1543,7 +1591,7 @@
   }
 
   /* =========================================================================
-   *  BAGIAN 9 — STATUS BAR, EMPTY STATE, SALIN DETAIL, RESET
+   * BAGIAN 9 — STATUS BAR, EMPTY STATE, SALIN DETAIL, RESET
    * ========================================================================= */
 
   function updateStatusBar(nodeCount, edgeCount) {
@@ -1575,9 +1623,9 @@
   /**
    * Salin detail Perdirjen ke clipboard.
    * POIN-10: Teks alert diperbarui sesuai nama tombol baru "Salin Detail Perdirjen".
-   *          Field baru (Tanggal Berlaku, Instansi, Tempat) disertakan dalam output.
+   * Field baru (Tanggal Berlaku, Instansi, Tempat) disertakan dalam output.
    * PATCH-3.4: Menyertakan bagian "RELASI TERHUBUNG" dan "RIWAYAT PERUBAHAN"
-   *            dari DOM elemen #dp-chips-dasar, #dp-chips-aksi, dan #dp-riwayat-tbody.
+   * dari DOM elemen #dp-chips-dasar, #dp-chips-aksi, dan #dp-riwayat-tbody.
    */
   function salinDetailPerdirjen() {
     var nomorEl    = document.getElementById('dp-nomor');
@@ -1746,21 +1794,21 @@
   }
 
   /* =========================================================================
-   *  BAGIAN 9c — EDGE FILTERING (TOGGLE LEGENDA RELASI)
+   * BAGIAN 9c — EDGE FILTERING (TOGGLE LEGENDA RELASI)
    * =========================================================================
    *
-   *  EDGE-FILTER-1: registerLegendFilters()
-   *    Pasang event listener 'change' via event delegation pada .legend.
-   *    Saat checkbox .legend-toggle berubah:
-   *      1. Update State.activeRels[relId] = checked
-   *      2. Panggil renderAllEgos() jika State.activeEgos tidak kosong.
+   * EDGE-FILTER-1: registerLegendFilters()
+   * Pasang event listener 'change' via event delegation pada .legend.
+   * Saat checkbox .legend-toggle berubah:
+   * 1. Update State.activeRels[relId] = checked
+   * 2. Panggil renderAllEgos() jika State.activeEgos tidak kosong.
    *
-   *  Perilaku:
-   *    - Toggle OFF → edge bertipe relId dan node eksklusif relasi itu
-   *      hilang dari kanvas karena tidak masuk unionNodeIds/unionEdgeDefs.
-   *    - Node Ego utama TIDAK pernah hilang karena unionNodeIds[egoId]=true
-   *      diset SEBELUM loop filter.
-   *    - resetSettings() juga mereset activeRels ke semua true + sync UI.
+   * Perilaku:
+   * - Toggle OFF → edge bertipe relId dan node eksklusif relasi itu
+   * hilang dari kanvas karena tidak masuk unionNodeIds/unionEdgeDefs.
+   * - Node Ego utama TIDAK pernah hilang karena unionNodeIds[egoId]=true
+   * diset SEBELUM loop filter.
+   * - resetSettings() juga mereset activeRels ke semua true + sync UI.
    * ========================================================================= */
 
   /**
@@ -1793,35 +1841,35 @@
   }
 
   /* =========================================================================
-   *  BAGIAN 9d — REFERENSI MODAL (REF-2..6)
+   * BAGIAN 9d — REFERENSI MODAL (REF-2..6)
    * =========================================================================
    *
-   *  REF-2: openReferensiModal()
-   *    - Tampilkan #referensi-modal (class is-open)
-   *    - Populasi dropdown #referensi-tahun-filter secara dinamis:
-   *        * Kumpulkan tahun unik dari T-06, filter 2014-2026, sort descending
-   *        * Tambahkan opsi "Semua Tahun" di atas
-   *    - Panggil renderReferensiTable('Semua Tahun')
+   * REF-2: openReferensiModal()
+   * - Tampilkan #referensi-modal (class is-open)
+   * - Populasi dropdown #referensi-tahun-filter secara dinamis:
+   * * Kumpulkan tahun unik dari T-06, filter 2014-2026, sort descending
+   * * Tambahkan opsi "Semua Tahun" di atas
+   * - Panggil renderReferensiTable('Semua Tahun')
    *
-   *  REF-3: closeReferensiModal()
-   *    - Hapus class is-open dari #referensi-modal
-   *    - Kembalikan body overflow ke default
+   * REF-3: closeReferensiModal()
+   * - Hapus class is-open dari #referensi-modal
+   * - Kembalikan body overflow ke default
    *
-   *  REF-4: renderReferensiTable(tahunFilter)
-   *    - Loop masterMap, saring T-06 + tahun 2014-2026
-   *    - Jika tahunFilter !== 'Semua Tahun', saring lebih spesifik
-   *    - Sort hasil berdasarkan Tahun descending lalu Penulisan Asli ascending
-   *    - Render ke #referensi-tbody; update badge jumlah
-   *    - Setiap <tr> punya data-id = ID Baku
+   * REF-4: renderReferensiTable(tahunFilter)
+   * - Loop masterMap, saring T-06 + tahun 2014-2026
+   * - Jika tahunFilter !== 'Semua Tahun', saring lebih spesifik
+   * - Sort hasil berdasarkan Tahun descending lalu Penulisan Asli ascending
+   * - Render ke #referensi-tbody; update badge jumlah
+   * - Setiap <tr> punya data-id = ID Baku
    *
-   *  REF-5: Klik baris #referensi-tbody → renderEgoNetwork(id) + tutup modal
+   * REF-5: Klik baris #referensi-tbody → renderEgoNetwork(id) + tutup modal
    *
-   *  REF-6: registerReferensiModal()
-   *    - Tombol X (#referensi-close-btn) → closeReferensiModal
-   *    - Overlay (#referensi-overlay) → closeReferensiModal
-   *    - Escape key (dengan guard: hanya jika settings-modal TIDAK terbuka)
-   *    - Change pada #referensi-tahun-filter → renderReferensiTable(value)
-   *    - Event delegation klik pada #referensi-tbody
+   * REF-6: registerReferensiModal()
+   * - Tombol X (#referensi-close-btn) → closeReferensiModal
+   * - Overlay (#referensi-overlay) → closeReferensiModal
+   * - Escape key (dengan guard: hanya jika settings-modal TIDAK terbuka)
+   * - Change pada #referensi-tahun-filter → renderReferensiTable(value)
+   * - Event delegation klik pada #referensi-tbody
    * ========================================================================= */
 
   /**
@@ -1953,17 +2001,8 @@
     /* Tutup via klik overlay */
     on('#referensi-overlay', 'click', closeReferensiModal);
 
-    /* Tutup via Escape (guard: jangan konflik dengan settings-modal) */
-    document.addEventListener('keydown', function (e) {
-      if (e.key !== 'Escape') return;
-      var refModal  = document.getElementById('referensi-modal');
-      var setModal  = document.getElementById('settings-modal');
-      /* Tutup referensi-modal hanya jika terbuka DAN settings-modal TIDAK terbuka */
-      if (refModal && refModal.classList.contains('is-open') &&
-          !(setModal && setModal.classList.contains('is-open'))) {
-        closeReferensiModal();
-      }
-    });
+    /* PANDUAN-2: Escape dikelola oleh handleGlobalEscape (dipasang di registerPanduanModal).
+     * Tidak perlu listener Escape terpisah di sini. */
 
     /* Change dropdown tahun → render ulang tabel */
     var selEl = document.getElementById('referensi-tahun-filter');
@@ -1990,13 +2029,113 @@
   }
 
   /* =========================================================================
+   * BAGIAN 9e — PANDUAN MODAL (PANDUAN-1 & PANDUAN-2)
+   * =========================================================================
+   *
+   * PANDUAN-1: openPanduanModal() / closePanduanModal()
+   *   Buka/tutup #panduan-modal via class .is-open, serta lock/unlock
+   *   body scroll.
+   *
+   * PANDUAN-2: handleGlobalEscape(e)
+   *   Handler Escape terpusat yang menggantikan tiga listener Escape terpisah
+   *   (settings, referensi, panduan). Ia hanya menutup SATU modal — modal
+   *   yang sedang terbuka dengan prioritas: Settings > Referensi > Panduan.
+   *   Dengan demikian tidak ada konflik tutup-simultan jika dua modal
+   *   secara tidak sengaja terbuka bersamaan.
+   *
+   * PANDUAN-3: registerPanduanModal()
+   *   Pasang semua event listener untuk #panduan-modal:
+   *   - Tombol X (#panduan-close-btn) → closePanduanModal
+   *   - Tombol Tutup footer (#panduan-close-btn-footer) → closePanduanModal
+   *   - Overlay (#panduan-overlay) → closePanduanModal
+   *   - Tombol #panduan-btn di header → openPanduanModal
+   *   - Escape key → handleGlobalEscape (satu listener, tidak duplikat)
+   *
+   * Catatan penting:
+   *   registerSettingsModal() dan registerReferensiModal() TIDAK lagi
+   *   mendaftarkan listener Escape sendiri-sendiri. Semua Escape dikelola
+   *   oleh handleGlobalEscape yang dipasang satu kali di registerPanduanModal.
+   * ========================================================================= */
+
+  /**
+   * PANDUAN-1: Buka modal panduan.
+   */
+  function openPanduanModal() {
+    var modal = document.getElementById('panduan-modal');
+    if (!modal) return;
+    modal.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  /**
+   * PANDUAN-1: Tutup modal panduan.
+   */
+  function closePanduanModal() {
+    var modal = document.getElementById('panduan-modal');
+    if (!modal) return;
+    modal.classList.remove('is-open');
+    /* Kembalikan overflow hanya jika tidak ada modal lain yang terbuka */
+    var anyOpen = ['settings-modal', 'referensi-modal'].some(function (id) {
+      var m = document.getElementById(id);
+      return m && m.classList.contains('is-open');
+    });
+    if (!anyOpen) document.body.style.overflow = '';
+  }
+
+  /**
+   * PANDUAN-2: Handler Escape terpusat untuk ketiga modal.
+   *
+   * Prioritas: Settings → Referensi → Panduan.
+   * Hanya satu modal yang ditutup per satu keydown Escape.
+   *
+   * @param {KeyboardEvent} e
+   */
+  function handleGlobalEscape(e) {
+    if (e.key !== 'Escape') return;
+
+    var setModal = document.getElementById('settings-modal');
+    var refModal = document.getElementById('referensi-modal');
+    var panModal = document.getElementById('panduan-modal');
+
+    if (setModal && setModal.classList.contains('is-open')) {
+      closeSettingsModal();
+    } else if (refModal && refModal.classList.contains('is-open')) {
+      closeReferensiModal();
+    } else if (panModal && panModal.classList.contains('is-open')) {
+      closePanduanModal();
+    }
+  }
+
+  /**
+   * PANDUAN-3: Pasang semua listener untuk #panduan-modal.
+   * Juga mendaftarkan handleGlobalEscape sebagai satu-satunya handler Escape.
+   * Dipanggil sekali dari init().
+   */
+  function registerPanduanModal() {
+    /* Tombol X di header */
+    on('#panduan-close-btn', 'click', closePanduanModal);
+
+    /* Tombol Tutup di footer */
+    on('#panduan-close-btn-footer', 'click', closePanduanModal);
+
+    /* Klik overlay */
+    on('#panduan-overlay', 'click', closePanduanModal);
+
+    /* Tombol ? di header */
+    on('#panduan-btn', 'click', openPanduanModal);
+
+    /* PANDUAN-2: Satu listener Escape terpusat untuk semua modal */
+    document.addEventListener('keydown', handleGlobalEscape);
+  }
+
+  /* =========================================================================
    *
    * SETTINGS-1 : openSettingsModal / closeSettingsModal
-   *  SETTINGS-2 : applyHideLabels(bool)
-   *  SETTINGS-3 : applyFreezeNetwork(bool)
-   *  SETTINGS-4 : applyDarkMode(bool)
-   *  SETTINGS-5 : resetSettings()
-   *  SETTINGS-6 : registerSettingsModal() — pasang semua listener modal
+   * SETTINGS-2 : applyHideLabels(bool)
+   * SETTINGS-3 : applyFreezeNetwork(bool)
+   * SETTINGS-4 : applyDarkMode(bool)
+   * SETTINGS-5 : resetSettings()
+   * SETTINGS-6 : registerSettingsModal() — pasang semua listener modal
    * ========================================================================= */
 
   /**
@@ -2087,7 +2226,7 @@
    *
    * Jika freeze=true  → physics.enabled = false (node berhenti memantul)
    * Jika freeze=false → physics.enabled = true, jalankan stabilisasi singkat,
-   *                     lalu matikan lagi agar graf tidak meledak
+   * lalu matikan lagi agar graf tidak meledak
    * ────────────────────────────────────────────────────────────────────────── */
   function applyFreezeNetwork(freeze) {
     Settings.freezeNet = freeze;
@@ -2143,7 +2282,7 @@
 
   /* ──────────────────────────────────────────────────────────────────────────
    * SETTINGS-6: Pasang semua event listener untuk elemen modal.
-   *             Dipanggil satu kali dari init().
+   * Dipanggil satu kali dari init().
    * ────────────────────────────────────────────────────────────────────────── */
   function registerSettingsModal() {
     /* Tutup via tombol X */
@@ -2152,13 +2291,8 @@
     /* Tutup via klik overlay */
     on('#settings-overlay', 'click', closeSettingsModal);
 
-    /* Tutup via tombol Escape */
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') {
-        var modal = document.getElementById('settings-modal');
-        if (modal && modal.classList.contains('is-open')) closeSettingsModal();
-      }
-    });
+    /* PANDUAN-2: Escape dikelola oleh handleGlobalEscape (dipasang di registerPanduanModal).
+     * Tidak perlu listener Escape terpisah di sini. */
 
     /* Toggle 1: Sembunyikan label garis */
     var elLabels = document.getElementById('toggle-hide-labels');
@@ -2189,7 +2323,7 @@
   }
 
   /* =========================================================================
-   *  BAGIAN 10 — HELPERS
+   * BAGIAN 10 — HELPERS
    * ========================================================================= */
 
   function trim(v)  { return (v || '').trim(); }
@@ -2216,13 +2350,14 @@
   }
 
   /* =========================================================================
-   *  ENTRY POINT
+   * ENTRY POINT
    * ========================================================================= */
 
   function init() {
     injectDynamicStyles();    // CSS dinamis disuntikkan
-    registerSettingsModal();  // SETTINGS-6: pasang listener modal (sebelum loadData)
+    registerSettingsModal();  // SETTINGS-6: pasang listener modal pengaturan
     registerReferensiModal(); // REF-6: pasang listener modal referensi
+    registerPanduanModal();   // PANDUAN-3: pasang listener modal panduan + Escape terpusat
     registerLegendFilters();  // EDGE-FILTER-1: pasang listener toggle legenda
     loadData();               // Muat CSV
   }
