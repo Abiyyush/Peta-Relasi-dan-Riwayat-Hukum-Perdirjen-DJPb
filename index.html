@@ -1755,6 +1755,52 @@
       background: rgba(255,255,255,.06);
     }
 
+  /* ═══════════════════════════════════════════════════════════════
+       TOAST NOTIFICATION (Pop-up Salin) - Desain Compact
+       ═══════════════════════════════════════════════════════════════ */
+    .copy-toast {
+      position: fixed;
+      top: 74px; /* 60px (tinggi header) + 14px (jarak kotak dari atas peta) */
+      left: 50%;
+      transform: translate(-50%, -10px);
+      background: var(--djpb-blue);
+      color: var(--bg-white);
+      border: 1px solid var(--border);
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 16px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      font-family: var(--font-body);
+      font-size: 12px;
+      font-weight: 600;
+      z-index: 9999;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      pointer-events: none;
+    }
+
+    .copy-toast.show {
+      opacity: 1;
+      visibility: visible;
+      transform: translate(-50%, 0); /* Meluncur turun dengan mulus */
+    }
+
+    /* Penyesuaian saat mode gelap aktif */
+    body.dark-mode .copy-toast {
+      background: var(--bg-panel);
+      color: var(--djpb-sky);
+      border-color: var(--border);
+    }
+
+    .copy-toast.show {
+      opacity: 1;
+      visibility: visible;
+    }
+
   </style>
 </head>
 <body>
@@ -2068,13 +2114,13 @@
           </svg>
           Fokus di Peta
         </button>
-        <!-- POIN 7: Teks "Ekspor Detail" → "Salin Detail Perdirjen", ikon → rantai (link) -->
+        <!-- POIN 7: Teks "Ekspor Detail" → "Salin Detail Peraturan", ikon → rantai (link) -->
         <button class="panel-footer-btn primary">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
             <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
           </svg>
-          Salin Detail Perdirjen
+          Salin Detail Peraturan
         </button>
       </div>
 
@@ -2428,7 +2474,7 @@
             </span>
           </li>
           <li>
-            <span><strong>Salin Detail Perdirjen</strong>
+            <span><strong>Salin Detail Peraturan</strong>
               <span class="inline-icon" title="Salin Detail">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
               </span>
@@ -2489,6 +2535,7 @@
   </div><!-- /modal-box -->
 </div><!-- /panduan-modal -->
 
+<div id="copy-toast" class="copy-toast">Detail Perdirjen berhasil disalin ke clipboard!</div>
 <script src="djpb-engine.js"></script>
 
 </body>

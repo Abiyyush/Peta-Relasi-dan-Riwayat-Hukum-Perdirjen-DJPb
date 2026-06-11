@@ -445,7 +445,7 @@
       /* 5.1: Wrapper relatif untuk input + custom dropdown */
       '<div class="search-input-wrapper">' +
       '<input id="search-input"' +
-      ' placeholder="Ketik nomor Perdirjen, misal: PER-1/PB/2024..." autocomplete="off"/>' +
+      ' placeholder="Ketik nomor Perdirjen" autocomplete="off"/>' +
       '<div id="custom-search-dropdown" class="custom-dropdown"></div>' +
       '</div>';
 
@@ -1323,8 +1323,8 @@
       });
     });
 
-    /* Panel Footer — Salin Detail Perdirjen (POIN-10: listener tetap, teks alert diperbarui) */
-    on('.panel-footer-btn.primary', 'click', salinDetailPerdirjen);
+    /* Panel Footer — Salin Detail Peraturan (POIN-10: listener tetap, teks alert diperbarui) */
+    on('.panel-footer-btn.primary', 'click', salinDetailPeraturan);
   }
 
   /* =========================================================================
@@ -1621,13 +1621,13 @@
   }
 
   /**
-   * Salin detail Perdirjen ke clipboard.
-   * POIN-10: Teks alert diperbarui sesuai nama tombol baru "Salin Detail Perdirjen".
+   * Salin detail Peraturan ke clipboard.
+   * POIN-10: Teks alert diperbarui sesuai nama tombol baru "Salin Detail Peraturan".
    * Field baru (Tanggal Berlaku, Instansi, Tempat) disertakan dalam output.
    * PATCH-3.4: Menyertakan bagian "RELASI TERHUBUNG" dan "RIWAYAT PERUBAHAN"
    * dari DOM elemen #dp-chips-dasar, #dp-chips-aksi, dan #dp-riwayat-tbody.
    */
-  function salinDetailPerdirjen() {
+  function salinDetailPeraturan() {
     var nomorEl    = document.getElementById('dp-nomor');
     var judulEl    = document.getElementById('dp-judul');
     var tahunEl    = document.getElementById('dp-tahun');
@@ -1639,7 +1639,14 @@
     var tempatEl   = document.getElementById('dp-tempat');
 
     if (!nomorEl || nomorEl.textContent === '—') {
-      alert('Tidak ada peraturan yang dipilih.\nKlik sebuah node terlebih dahulu.');
+      var toast = document.getElementById('copy-toast');
+      if (toast) {
+        toast.textContent = 'Tidak ada peraturan yang dipilih'; /* Teks diubah dinamis */
+        toast.classList.add('show');
+        setTimeout(function() {
+          toast.classList.remove('show');
+        }, 2000);
+      }
       return;
     }
 
@@ -1731,8 +1738,17 @@
 
     var text = lines.join('\n');
 
-    navigator.clipboard.writeText(text)
-      .then(function () { alert('Detail Perdirjen berhasil disalin ke clipboard!'); })
+   navigator.clipboard.writeText(text)
+      .then(function () { 
+        var toast = document.getElementById('copy-toast');
+        if (toast) {
+          toast.textContent = 'Detail Perdirjen berhasil disalin ke clipboard!'; /* Kembalikan teks sukses */
+          toast.classList.add('show');
+          setTimeout(function() {
+            toast.classList.remove('show');
+          }, 2000); /* Hilang otomatis setelah 2 detik */
+        }
+      })
       .catch(function () {
         var w = window.open('', '_blank');
         if (w) {
