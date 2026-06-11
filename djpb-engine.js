@@ -1,85 +1,49 @@
 /**
  * ╔══════════════════════════════════════════════════════════════════════════╗
  * ║  MESIN JAVASCRIPT — Peta Relasi dan Riwayat Hukum Perdirjen DJPb       ║
- * ║  Versi : 6.0.0  (Edge Filtering — Toggle Legenda Relasi)              ║
+ * ║  Versi : 7.0.0  (Modal Referensi Katalog Perdirjen)                    ║
  * ║  Tempel : Sebagai file djpb-engine.js, lalu panggil via <script src>   ║
  * ║           tepat sebelum </body> di index.html                           ║
  * ╚══════════════════════════════════════════════════════════════════════════╝
  *
- * ── FITUR BARU (v5.2.0) ───────────────────────────────────────────────────
- *  CLUSTER-1: Penandaan Node Leaf R-01.
- *             Di renderAllEgos(), setiap node yang:
- *               a) Terhubung ke ego aktif HANYA via relasi R-01 (ego → target), DAN
- *               b) Merupakan Leaf Node (degree = 1 di dalam graf yang dirender)
- *             akan ditandai dengan properti `isLeafR01: true` dan
- *             `parentEgo: <id_ego>` sebelum dimasukkan ke nodesDS.
+ * ── FITUR BARU (v7.0.0) ───────────────────────────────────────────────────
+ *  REF-1: Tombol "Filter" di header diubah menjadi "Referensi Peraturan"
+ *         dengan ikon clipboard. Event listener lama (fokus ke search input)
+ *         diganti dengan openReferensiModal().
  *
- *  CLUSTER-2: Fungsi applyClustering().
- *             Dipanggil tepat setelah fit() di dalam renderAllEgos().
- *             Menggunakan State.networkInst.cluster({ ... }) per egoId.
- *             Hanya membentuk kluster jika childNodes.length >= 3.
- *             Label kluster: "+N Dasar Hukum\n(Klik Ganda Buka)"
- *             Desain: shape:circle, warna biru #3182CE, font putih.
+ *  REF-2: openReferensiModal()
+ *         Membuka #referensi-modal, mengisi dropdown tahun secara dinamis
+ *         dari masterMap (hanya T-06, tahun 2014-2026, descending), lalu
+ *         memanggil renderReferensiTable('Semua Tahun').
  *
- *  CLUSTER-3: Event doubleClick diperbarui.
- *             Jika node adalah kluster → openCluster() + applyActiveSettings().
- *             Jika bukan kluster → renderEgoNetwork() seperti sebelumnya.
+ *  REF-3: closeReferensiModal()
+ *         Menutup modal dan mengembalikan overflow body ke default.
  *
- * ── PATCH (v5.2.1) ───────────────────────────────────────────────────────
- *  PATCH-1: Buka Kluster Sebelum Clear (renderAllEgos, cabang re-render).
- *           Sebelum State.nodesDS.clear(), semua kluster aktif dibuka terlebih
- *           dahulu dengan iterasi via .slice() agar ghost nodes tidak tertinggal
- *           di memori internal Vis.js setelah DataSet dikosongkan.
+ *  REF-4: renderReferensiTable(tahunFilter)
+ *         Memfilter masterMap untuk T-06 dan tahun 2014-2026.
+ *         Mengisi #referensi-tbody dengan baris data.
+ *         Setiap <tr> memiliki data-id berisi ID Baku dan cursor pointer.
  *
- *  PATCH-2: Pindah posisi applyClustering() di renderAllEgos().
- *           Dari: di dalam callback stabilizationIterationsDone (async, setelah fit)
- *           Ke  : tepat setelah State.edgesDS.add(edgesArray) (sync, sebelum fisika)
- *           Kluster terbentuk sebelum fisika berjalan → layout lebih efisien.
+ *  REF-5: Event delegation pada #referensi-tbody.
+ *         Klik baris → renderEgoNetwork(id) + closeReferensiModal().
  *
- *  PATCH-3: Pindah posisi applyClustering() di initVisNetwork().
- *           Dari: di dalam callback stabilizationIterationsDone
- *           Ke  : tepat setelah new vis.Network(...) (sync)
- *           Alasan sama dengan PATCH-2.
+ *  REF-6: registerReferensiModal()
+ *         Pasang semua listener modal: tombol X, overlay, change dropdown.
  *
- *  PATCH-4: Gunakan .slice() di dalam applyClustering() saat iterasi node untuk
- *           openCluster kluster < 3 node, agar mutasi nodeIndices tidak merusak
- *           iterasi yang sedang berjalan.
+ * ── FITUR SEBELUMNYA (v6.0.0) ─────────────────────────────────────────────
+ *  EDGE-FILTER: Toggle checkbox Legenda R-01 s.d R-04.
  *
- * ── FITUR SEBELUMNYA (v5.1.0) ────────────────────────────────────────────
- *  5.1-1: <datalist id="dl-perdirjen"> dihapus sepenuhnya.
- *  5.1-2: Input dibungkus dalam <div class="search-input-wrapper"> (position:relative).
- *  5.1-3: <div id="custom-search-dropdown" class="custom-dropdown"> sebagai
- *         pengganti datalist. Kelas .is-open mengontrol visibilitas (display:block).
- *  5.1-4: refreshCustomDropdown(tahunFilter, textFilter) menggantikan refreshDatalist.
- *         Memfilter T-06, mendukung substring matching, dan membatasi 80 item.
- *  5.1-5: Dropdown hanya hilang saat: klik item, klik di luar, atau Escape.
- *         Tidak hilang saat mouse bergeser (masalah bawaan <datalist> browser).
- *  5.1-6: CSS dark-mode override untuk .custom-dropdown dan .custom-dropdown-item.
+ * ── FITUR SEBELUMNYA (v5.2.x) ─────────────────────────────────────────────
+ *  CLUSTER-1..3: Smart Clustering Vis.js + fix Ghost Node via .slice().
  *
- * ── FITUR SEBELUMNYA (v5.0.0) ────────────────────────────────────────────
- *  MULTI-1: State.activeEgos[] menggantikan State.currentEgo (null → array).
- *           Setiap pencarian MENAMBAH ego baru ke kanvas (Append/Union),
- *           bukan mengganti yang lama.
+ * ── FITUR SEBELUMNYA (v5.1.0) ─────────────────────────────────────────────
+ *  Custom Autocomplete Dropdown (T-06) menggantikan <datalist>.
  *
- *  MULTI-2: renderEgoNetwork(newEgoId) diperbarui — mengumpulkan node & edge
- *           Degree-1 dari SEMUA ID di State.activeEgos, menghindari duplikat,
- *           dan menandai semua ego aktif dengan gaya isEgo (border tebal).
+ * ── FITUR SEBELUMNYA (v5.0.0) ─────────────────────────────────────────────
+ *  MULTI-1..5: Multi-Ego Network (append node, chip filter).
  *
- *  MULTI-3: renderActiveFilterChips() merender chip filter di
- *           #active-filters-container. Tiap chip punya tombol × untuk
- *           menghapus satu ego dari kanvas tanpa mereset yang lain.
- *
- *  MULTI-4: Jika State.activeEgos kosong setelah penghapusan chip,
- *           kanvas dibersihkan dan showEmptyState() ditampilkan.
- *
- *  MULTI-5: Panel Footer "Fokus di Peta" difokuskan ke ego terakhir yang
- *           diklik/dipilih (State.lastSelectedEgo).
- *
- * ── FITUR SEBELUMNYA (v4.0.0) ────────────────────────────────────────────
+ * ── FITUR SEBELUMNYA (v4.0.0) ─────────────────────────────────────────────
  *  SETTINGS-1..6: Modal Pengaturan (labels, freeze, dark mode).
- *  PATCH-3.4 : salinDetailPerdirjen() menyertakan Relasi & Riwayat.
- *  POIN-9    : Field Tanggal Berlaku, Instansi, Tempat Terbit.
- *  FIX-1..6  : Vis.js toolbar, tahun, datalist, scroll, Filter, deep-link.
  */
 
 (function () {
@@ -1336,15 +1300,8 @@
       loadData();
     });
 
-    /* 2. FIX-5: Filter — fokus & seleksi ke kotak pencarian */
-    on('.toolbar-btn[title="Filter"]', 'click', function () {
-      var inputEl = document.getElementById('search-input')
-                 || document.querySelector('.map-search-bar input');
-      if (inputEl) {
-        inputEl.focus();
-        inputEl.select();
-      }
-    });
+    /* 2. REF-1: Referensi Peraturan — buka modal referensi */
+    on('.toolbar-btn[title="Referensi Peraturan"]', 'click', openReferensiModal);
 
     /* 3. Pengaturan — buka modal */
     on('.toolbar-btn[title="Pengaturan"]', 'click', openSettingsModal);
@@ -1836,10 +1793,205 @@
   }
 
   /* =========================================================================
-   *  BAGIAN 9b — SETTINGS MODAL
+   *  BAGIAN 9d — REFERENSI MODAL (REF-2..6)
    * =========================================================================
    *
-   *  SETTINGS-1 : openSettingsModal / closeSettingsModal
+   *  REF-2: openReferensiModal()
+   *    - Tampilkan #referensi-modal (class is-open)
+   *    - Populasi dropdown #referensi-tahun-filter secara dinamis:
+   *        * Kumpulkan tahun unik dari T-06, filter 2014-2026, sort descending
+   *        * Tambahkan opsi "Semua Tahun" di atas
+   *    - Panggil renderReferensiTable('Semua Tahun')
+   *
+   *  REF-3: closeReferensiModal()
+   *    - Hapus class is-open dari #referensi-modal
+   *    - Kembalikan body overflow ke default
+   *
+   *  REF-4: renderReferensiTable(tahunFilter)
+   *    - Loop masterMap, saring T-06 + tahun 2014-2026
+   *    - Jika tahunFilter !== 'Semua Tahun', saring lebih spesifik
+   *    - Sort hasil berdasarkan Tahun descending lalu Penulisan Asli ascending
+   *    - Render ke #referensi-tbody; update badge jumlah
+   *    - Setiap <tr> punya data-id = ID Baku
+   *
+   *  REF-5: Klik baris #referensi-tbody → renderEgoNetwork(id) + tutup modal
+   *
+   *  REF-6: registerReferensiModal()
+   *    - Tombol X (#referensi-close-btn) → closeReferensiModal
+   *    - Overlay (#referensi-overlay) → closeReferensiModal
+   *    - Escape key (dengan guard: hanya jika settings-modal TIDAK terbuka)
+   *    - Change pada #referensi-tahun-filter → renderReferensiTable(value)
+   *    - Event delegation klik pada #referensi-tbody
+   * ========================================================================= */
+
+  /**
+   * REF-2: Buka modal referensi, isi dropdown tahun, render tabel awal.
+   */
+  function openReferensiModal() {
+    var modal = document.getElementById('referensi-modal');
+    if (!modal) return;
+
+    /* ── Populasi dropdown tahun secara dinamis ── */
+    var selectEl = document.getElementById('referensi-tahun-filter');
+    if (selectEl) {
+      /* Kumpulkan tahun unik dari T-06 dalam rentang 2014-2026 */
+      var tahunSet = {};
+      State.masterMap.forEach(function (row) {
+        if (trim(row['ID Tipe']) !== 'T-06') return;
+        var t = parseInt(trim(row['Tahun']), 10);
+        if (!isNaN(t) && t >= YEAR_MIN && t <= YEAR_MAX) {
+          tahunSet[t] = true;
+        }
+      });
+
+      var tahunList = Object.keys(tahunSet)
+        .map(Number)
+        .sort(function (a, b) { return b - a; }); // descending
+
+      /* Rebuild opsi dropdown (reset dahulu, pertahankan "Semua Tahun") */
+      selectEl.innerHTML = '<option value="Semua Tahun">Semua Tahun</option>';
+      tahunList.forEach(function (t) {
+        var opt = document.createElement('option');
+        opt.value       = String(t);
+        opt.textContent = String(t);
+        selectEl.appendChild(opt);
+      });
+
+      /* Reset ke "Semua Tahun" setiap kali modal dibuka */
+      selectEl.value = 'Semua Tahun';
+    }
+
+    /* ── Render tabel dengan semua tahun ── */
+    renderReferensiTable('Semua Tahun');
+
+    /* ── Buka modal ── */
+    modal.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  /**
+   * REF-3: Tutup modal referensi.
+   */
+  function closeReferensiModal() {
+    var modal = document.getElementById('referensi-modal');
+    if (!modal) return;
+    modal.classList.remove('is-open');
+    document.body.style.overflow = '';
+  }
+
+  /**
+   * REF-4: Render tabel katalog Perdirjen ke #referensi-tbody.
+   *
+   * @param {string} tahunFilter  — 'Semua Tahun' | '2024' | '2023' | dst.
+   */
+  function renderReferensiTable(tahunFilter) {
+    var tbody   = document.getElementById('referensi-tbody');
+    var badgeEl = document.getElementById('referensi-count-badge');
+    if (!tbody) return;
+
+    var semua  = (!tahunFilter || tahunFilter === 'Semua Tahun');
+    var items  = [];
+
+    State.masterMap.forEach(function (row, id) {
+      /* Hanya Perdirjen (T-06) */
+      if (trim(row['ID Tipe']) !== 'T-06') return;
+
+      /* Hanya tahun dalam rentang 2014-2026 */
+      var t = parseInt(trim(row['Tahun']), 10);
+      if (isNaN(t) || t < YEAR_MIN || t > YEAR_MAX) return;
+
+      /* Jika ada filter tahun spesifik, terapkan */
+      if (!semua && String(t) !== String(tahunFilter)) return;
+
+      var penulisan = trim(row['Penulisan Asli']) || id;
+      var judul     = trim(row['Judul'])           || '—';
+
+      items.push({
+        id:        id,
+        penulisan: penulisan,
+        tahun:     t,
+        judul:     judul
+      });
+    });
+
+    /* Sort: tahun descending, lalu penulisan ascending */
+    items.sort(function (a, b) {
+      if (b.tahun !== a.tahun) return b.tahun - a.tahun;
+      return a.penulisan.localeCompare(b.penulisan, 'id');
+    });
+
+    /* Update badge jumlah */
+    if (badgeEl) badgeEl.textContent = items.length + ' peraturan';
+
+    if (!items.length) {
+      tbody.innerHTML =
+        '<tr class="referensi-empty-row"><td colspan="3">Tidak ada data untuk tahun yang dipilih.</td></tr>';
+      return;
+    }
+
+    var html = '';
+    items.forEach(function (item) {
+      html +=
+        '<tr data-id="' + escH(item.id) + '" title="Klik untuk membuka peta: ' + escH(item.penulisan) + '">' +
+        '<td>' + escH(item.penulisan) + '</td>' +
+        '<td>' + escH(String(item.tahun)) + '</td>' +
+        '<td>' + escH(item.judul) + '</td>' +
+        '</tr>';
+    });
+
+    tbody.innerHTML = html;
+  }
+
+  /**
+   * REF-6: Pasang semua event listener untuk modal referensi.
+   * Dipanggil satu kali dari init().
+   */
+  function registerReferensiModal() {
+    /* Tutup via tombol X */
+    on('#referensi-close-btn', 'click', closeReferensiModal);
+
+    /* Tutup via klik overlay */
+    on('#referensi-overlay', 'click', closeReferensiModal);
+
+    /* Tutup via Escape (guard: jangan konflik dengan settings-modal) */
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape') return;
+      var refModal  = document.getElementById('referensi-modal');
+      var setModal  = document.getElementById('settings-modal');
+      /* Tutup referensi-modal hanya jika terbuka DAN settings-modal TIDAK terbuka */
+      if (refModal && refModal.classList.contains('is-open') &&
+          !(setModal && setModal.classList.contains('is-open'))) {
+        closeReferensiModal();
+      }
+    });
+
+    /* Change dropdown tahun → render ulang tabel */
+    var selEl = document.getElementById('referensi-tahun-filter');
+    if (selEl) {
+      selEl.addEventListener('change', function () {
+        renderReferensiTable(selEl.value);
+      });
+    }
+
+    /* REF-5: Event delegation klik pada baris tabel */
+    var tbody = document.getElementById('referensi-tbody');
+    if (tbody) {
+      tbody.addEventListener('click', function (e) {
+        var tr = e.target.closest('tr[data-id]');
+        if (!tr) return;
+        var id = tr.getAttribute('data-id');
+        if (!id) return;
+        /* Gambar peta ego untuk peraturan yang diklik */
+        renderEgoNetwork(id);
+        /* Tutup modal */
+        closeReferensiModal();
+     });
+    }
+  }
+
+  /* =========================================================================
+   *
+   * SETTINGS-1 : openSettingsModal / closeSettingsModal
    *  SETTINGS-2 : applyHideLabels(bool)
    *  SETTINGS-3 : applyFreezeNetwork(bool)
    *  SETTINGS-4 : applyDarkMode(bool)
@@ -2070,6 +2222,7 @@
   function init() {
     injectDynamicStyles();    // CSS dinamis disuntikkan
     registerSettingsModal();  // SETTINGS-6: pasang listener modal (sebelum loadData)
+    registerReferensiModal(); // REF-6: pasang listener modal referensi
     registerLegendFilters();  // EDGE-FILTER-1: pasang listener toggle legenda
     loadData();               // Muat CSV
   }
