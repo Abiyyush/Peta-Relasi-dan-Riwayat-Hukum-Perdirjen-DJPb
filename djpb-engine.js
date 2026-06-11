@@ -1294,10 +1294,16 @@
    */
   function registerHeaderToolbar() {
 
-    /* 1. Muat Data — reset & muat ulang */
+   /* 1. Muat Data — reset & muat ulang */
     on('.toolbar-btn[title="Muat Data"]', 'click', function () {
       resetAll();
       loadData();
+      
+      /* Pastikan panel detail kembali terbuka ke kondisi default */
+      var dp = document.getElementById('detail-panel');
+      var nm = document.getElementById('network-map');
+      if (dp) dp.classList.remove('is-hidden');
+      if (nm) nm.classList.remove('is-expanded');
     });
 
     /* 2. REF-1: Referensi Peraturan — buka modal referensi */
@@ -1306,10 +1312,24 @@
     /* 3. Pengaturan — buka modal */
     on('.toolbar-btn[title="Pengaturan"]', 'click', openSettingsModal);
 
-    /* Panel — tombol tutup */
+   /* Panel — tombol tutup */
     on('.panel-close-btn', 'click', function () {
       if (State.networkInst) State.networkInst.selectNodes([]);
       resetDetailPanel();
+      
+      /* Sembunyikan panel dan perlebar peta */
+      var dp = document.getElementById('detail-panel');
+      var nm = document.getElementById('network-map');
+      if (dp) dp.classList.add('is-hidden');
+      if (nm) nm.classList.add('is-expanded');
+    });
+
+    /* Tombol — Buka kembali panel detail via ikon informasi (i) */
+    on('#panel-open-btn', 'click', function () {
+      var dp = document.getElementById('detail-panel');
+      var nm = document.getElementById('network-map');
+      if (dp) dp.classList.remove('is-hidden');
+      if (nm) nm.classList.remove('is-expanded');
     });
 
     /* Panel Footer — Fokus di Peta (MULTI-5: gunakan lastSelectedEgo) */
@@ -1337,7 +1357,7 @@
    * POIN-9: Mengekstrak Tanggal Berlaku, Instansi Penerbit, dan Tempat Terbit
    * dari masterMap dan mengisinya ke ID DOM baru.
    */
-  function updateDetailPanel(nodeId, data, connectedEdges) {
+ function updateDetailPanel(nodeId, data, connectedEdges) {
     if (!data) return;
 
     var idTipe    = trim(data['ID Tipe']);

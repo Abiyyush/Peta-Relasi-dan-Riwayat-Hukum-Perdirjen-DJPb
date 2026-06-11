@@ -463,7 +463,7 @@
       background: var(--text-muted);
     }
 
-    /* ─── DETAIL PANEL ──────────────────────────────────────────── */
+   /* ─── DETAIL PANEL ──────────────────────────────────────────── */
     #detail-panel {
       flex: 0 0 25%;
       background: var(--bg-white);
@@ -471,6 +471,57 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
+    }
+
+    /* Kelas tambahan untuk menyembunyikan panel dan memperlebar peta */
+    #detail-panel.is-hidden {
+      display: none !important;
+    }
+    
+   #network-map.is-expanded {
+      flex: 1 1 100%;
+      max-width: 100%;
+    }
+
+    /* Tombol info untuk memunculkan kembali panel (Hanya muncul saat panel hidden) */
+    .panel-open-btn {
+      display: none; /* Sembunyi secara default */
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      width: 32px;
+      height: 32px;
+      background: var(--bg-white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-secondary);
+      z-index: 10;
+      transition: background .12s, color .12s;
+    }
+    
+    /* Otomatis muncul hanya ketika peta sedang meluas (panel ditutup) */
+    #network-map.is-expanded .panel-open-btn {
+      display: flex;
+    }
+    
+    .panel-open-btn:hover {
+      background: var(--djpb-pale);
+      color: var(--djpb-blue);
+    }
+
+    /* Penyesuaian saat mode gelap aktif */
+    body.dark-mode .panel-open-btn {
+      background: #162032;
+      border-color: var(--border);
+      color: var(--text-secondary);
+    }
+    body.dark-mode .panel-open-btn:hover {
+      background: var(--bg-panel);
+      color: var(--djpb-sky);
     }
 
     /* Panel header */
@@ -1870,9 +1921,17 @@
     </div>
   </header>
 
-  <div class="workspace">
+ <div class="workspace">
 
     <div id="network-map">
+
+      <button id="panel-open-btn" class="panel-open-btn" title="Buka Panel Detail">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 14px; height: 14px;">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="16" x2="12" y2="12"></line>
+          <line x1="12" y1="8" x2="12.01" y2="8"></line>
+        </svg>
+      </button>
 
       <div class="map-toolbar">
         <div class="map-toolbar-group">
@@ -1989,7 +2048,7 @@
       <div class="panel-header">
         <div class="panel-header-top">
           <div class="panel-title">Detail Peraturan</div>
-          <button class="panel-close-btn" title="Tutup panel">
+          <button class="panel-close-btn" title="Tutup Panel">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
               <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
             </svg>
