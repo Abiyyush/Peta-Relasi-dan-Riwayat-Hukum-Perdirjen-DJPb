@@ -386,7 +386,7 @@
 
       // Tampilkan empty state: siap menunggu input
       showEmptyState(
-        'Data CSV Berhasil Dimuat',
+        'Data Berhasil Dimuat',
         'Gunakan kotak pencarian di atas untuk memilih peraturan dan memulai visualisasi.',
         false
       );
@@ -804,9 +804,13 @@
 
       var idTipe    = trim(row['ID Tipe']);
       var penulisan = trim(row['Penulisan Asli']) || id;
-      var status    = trim(row['Status Sekarang']);
+     var status    = trim(row['Status Sekarang']);
       var isEgo     = !!activeEgoSet[id];  /* true untuk SEMUA ego aktif */
       var colorDef  = NODE_COLORS[idTipe] || NODE_COLOR_DEFAULT;
+
+      /* Ambil nama tipe dokumen lengkap dari kamus TYPE_META */
+      var tipeMetaObj = TYPE_META[idTipe] || { name: idTipe || '—' };
+      var tipeDokumen = tipeMetaObj.name;
 
       /* CLUSTER-1: Bawa informasi leaf R-01 ke dalam properti node */
       var leafInfo  = leafR01Map[id] || null;
@@ -814,8 +818,7 @@
       var nodeObj = {
         id:    id,
         label: penulisan,
-        title: penulisan + '\nStatus: ' + (status || '—') + '\nID: ' + id +
-               (isEgo ? '\n★ Ego Aktif' : ''),
+        title: penulisan + '\nStatus: ' + (status || '—') + '\nTipe Dokumen: ' + tipeDokumen,
         color: {
           background: colorDef.background,
           border:     colorDef.border,
