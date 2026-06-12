@@ -815,10 +815,18 @@
       /* CLUSTER-1: Bawa informasi leaf R-01 ke dalam properti node */
       var leafInfo  = leafR01Map[id] || null;
 
+      /* Konversi tooltip ke format HTML agar rapi dan tidak hilang di Desktop */
+      var tooltipHTML = 
+        '<div style="font-family: \'Plus Jakarta Sans\', sans-serif; font-size: 11px; line-height: 1.6; padding: 2px;">' +
+        '<strong style="color: var(--djpb-blue, #144272); font-size: 12.5px;">' + escH(penulisan) + '</strong><br>' +
+        '<span style="color: var(--text-muted, #8FA3B4);">Status:</span> <strong style="color: var(--text-primary, #000);">' + escH(status || '—') + '</strong><br>' +
+        '<span style="color: var(--text-muted, #8FA3B4);">Tipe:</span> ' + escH(tipeDokumen) +
+        '</div>';
+
       var nodeObj = {
         id:    id,
         label: penulisan,
-        title: penulisan + '\nStatus: ' + (status || '—') + '\nTipe Dokumen: ' + tipeDokumen,
+        title: tooltipHTML,
         color: {
           background: colorDef.background,
           border:     colorDef.border,

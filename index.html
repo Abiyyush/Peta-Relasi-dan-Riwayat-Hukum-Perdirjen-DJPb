@@ -1007,6 +1007,22 @@
       scrollbar-color: var(--border-strong) transparent;
     }
 
+/* ─── TOOLTIP VIS.JS (DESKTOP) ──────────────────────────────── */
+    .vis-network-tooltip {
+      background: rgba(255, 255, 255, 0.98) !important;
+      border: 1px solid var(--border-strong) !important;
+      box-shadow: var(--shadow-lg) !important;
+      border-radius: var(--radius) !important;
+      padding: 6px 10px !important;
+      z-index: 9999 !important;
+      pointer-events: none; /* Mencegah kedipan saat kursor menyentuh pop-up */
+    }
+
+    body.dark-mode .vis-network-tooltip {
+      background: rgba(22, 32, 50, 0.98) !important;
+      border-color: var(--border-strong) !important;
+    }
+
    /* ─── RESPONSIVE (Penyesuaian Mobile & Tablet) ───────────────── */
     @media (max-width: 900px) {
       .workspace { flex-direction: column; }
@@ -1143,7 +1159,7 @@
       }
 
       /* 9. Sembunyikan Tooltip (Pop-up Hover) Vis.js di Mobile */
-      .vis-tooltip {
+      .vis-network-tooltip {
         display: none !important;
       }
     }
