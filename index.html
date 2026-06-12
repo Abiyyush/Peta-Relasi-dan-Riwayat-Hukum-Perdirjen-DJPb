@@ -980,11 +980,49 @@
       scrollbar-color: var(--border-strong) transparent;
     }
 
-    /* ─── RESPONSIVE ─────────────────────────────────────────────── */
+   /* ─── RESPONSIVE (Penyesuaian Mobile & Tablet) ───────────────── */
     @media (max-width: 900px) {
       .workspace { flex-direction: column; }
-      #network-map { flex: 0 0 55%; }
-      #detail-panel { flex: 0 0 45%; border-left: none; border-top: 1.5px solid var(--border-strong); }
+      #network-map { flex: 0 0 50%; } /* Dibagi rata 50:50 dengan panel bawah */
+      #detail-panel { flex: 0 0 50%; border-left: none; border-top: 1.5px solid var(--border-strong); }
+    }
+
+    /* Khusus untuk Layar Handphone (< 600px) */
+    @media (max-width: 600px) {
+      /* 1. Rapikan Header: Kecilkan teks & sembunyikan sub-judul agar tidak tumpang tindih */
+      .app-header { padding: 0 10px; gap: 8px; }
+      .header-logo-mark { width: 28px; height: 28px; }
+      .header-title { font-size: 11.5px; line-height: 1.3; }
+      .header-subtitle, .header-badge.beta, .header-divider { display: none; }
+      .toolbar-btn { width: 28px; height: 28px; }
+
+      /* 2. Rapikan Alat Peta & Pencarian: Biarkan pencarian turun ke baris baru */
+      .map-toolbar {
+        top: 10px; left: 10px; right: 10px;
+        flex-wrap: wrap; 
+      }
+      .map-search-bar { flex: 1 1 100%; } /* Kotak pencarian memenuhi lebar layar */
+      .map-search-bar select { max-width: 85px; font-size: 10px; }
+
+      /* 3. Perkecil Legenda Relasi */
+      .legend {
+        bottom: 10px; left: 10px;
+        min-width: 150px;
+        padding: 8px 10px;
+      }
+      .legend-title { font-size: 8.5px; margin-bottom: 6px; }
+      .legend-label { font-size: 9.5px; }
+      .legend-items { gap: 4px; }
+      .legend-item .toggle-switch { transform: scale(0.6) !important; }
+
+      /* 4. Perkecil Status Bar (Node/Relasi) */
+      .map-statusbar { bottom: 10px; right: 10px; gap: 4px; }
+      .map-stat-chip { padding: 3px 6px; font-size: 9px; }
+      /* Sembunyikan persentase zoom di HP agar tidak menabrak legenda */
+      .map-stat-chip:last-child { display: none; }
+
+      /* 5. Sesuaikan Tombol Buka Panel */
+      .panel-open-btn { top: 10px; right: 10px; width: 28px; height: 28px; }
     }
 
     /* ─── FADE IN ANIMATION ─────────────────────────────────────── */
