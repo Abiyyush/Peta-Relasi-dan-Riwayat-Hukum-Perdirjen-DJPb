@@ -282,10 +282,13 @@
       letter-spacing: .01em;
     }
 
-    .map-empty-sub {
+   .map-empty-sub {
       font-size: 11px;
       color: rgba(143,163,180,.7);
       margin-top: -10px;
+      text-align: center; /* Membuat teks rata tengah */
+      padding: 0 20px;    /* Memberi jarak aman agar tidak menabrak tepi layar */
+      line-height: 1.4;
     }
 
     /* ─── MAP TOOLBAR (float inside canvas) ─────────────────────── */
@@ -1118,6 +1121,12 @@
         height: 10px;
         font-size: 6px;
         margin-left: 2px;
+      }
+
+      /* 8. Sesuaikan Teks Kosong (Empty State) */
+      .map-empty-sub {
+        font-size: 9px; /* Ukuran huruf diperkecil untuk mobile */
+        padding: 0 10px;
       }
     }
 
