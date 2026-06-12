@@ -76,11 +76,12 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    /* ─── LAYOUT SHELL ──────────────────────────────────────────── */
+  /* ─── LAYOUT SHELL ──────────────────────────────────────────── */
     .app-shell {
       display: flex;
       flex-direction: column;
-      height: 100vh;
+      height: 100vh;  /* Fallback untuk browser lawas */
+      height: 100dvh; /* Fix cerdas untuk mengatasi menu browser mobile */
       overflow: hidden;
     }
 
@@ -1090,12 +1091,12 @@
       
       /* Memastikan modal panduan mematuhi batas baru */
       #panduan-modal .modal-box {
-        max-height: calc(100vh - 70px);
+        max-height: calc(100dvh - 70px); /* Mengubah vh menjadi dvh */
       }
       
       #panduan-modal .modal-body {
         padding: 14px;
-        max-height: calc(100vh - 160px); /* Area scroll dikurangi agar footer tetap terlihat rapi */
+        max-height: calc(100dvh - 160px); /* Mengubah vh menjadi dvh */
       }
       .panduan-section { margin-bottom: 14px; }
       .panduan-section-title { font-size: 8.5px; margin-bottom: 6px; }
@@ -1781,7 +1782,7 @@
     /* Modal panduan lebih lebar dari settings, lebih sempit dari referensi */
     #panduan-modal .modal-box {
       max-width: 560px;
-      max-height: calc(100vh - 48px);
+      max-height: calc(100dvh - 48px); /* Mengubah vh menjadi dvh */
     }
 
     /* Body panduan: scroll jika konten panjang */
@@ -1789,7 +1790,7 @@
       padding: 20px 20px 16px;
       gap: 0;
       overflow-y: auto;
-      max-height: calc(100vh - 180px);
+      max-height: calc(100dvh - 180px); /* Mengubah vh menjadi dvh */
     }
 
     /* ── Grup seksi panduan ── */
