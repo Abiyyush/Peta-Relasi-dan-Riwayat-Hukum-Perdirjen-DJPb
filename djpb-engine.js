@@ -410,11 +410,11 @@
    * tidak hilang saat mouse bergeser. Dropdown hilang hanya saat:
    * (a) user memilih item, (b) user klik di luar, (c) user tekan Escape.
    */
-  function buildSearchUI() {
+ function buildSearchUI() {
     var bar = document.querySelector('.map-search-bar');
     if (!bar) return;
 
-    /* FIX-2: Kumpulkan & filter tahun dalam rentang 2014–2026, descending */
+    /* Kumpulkan & filter tahun dalam rentang 2014–2026, descending */
     var tahunSet = {};
     State.masterMap.forEach(function (row) {
       var t = parseInt(trim(row['Tahun']), 10);
@@ -424,83 +424,95 @@
     });
     var tahunList = Object.keys(tahunSet)
       .map(Number)
-      .sort(function (a, b) { return b - a; }); // descending
+      .sort(function (a, b) { return b - a; });
 
-    /* Bangun HTML search bar baru */
-    var optionsTahun = tahunList
-      .map(function (t) { return '<option value="' + t + '">' + t + '</option>'; })
-      .join('');
+    /* Bangun elemen dropdown custom untuk tahun */
+    var optionsTahunHTML = '<div class="custom-dropdown-item year-item" data-year="">Semua Tahun</div>';
+    tahunList.forEach(function (t) {
+      optionsTahunHTML += '<div class="custom-dropdown-item year-item" data-year="' + t + '">' + t + '</div>';
+    });
 
     bar.innerHTML =
-      /* Ikon kaca pembesar */
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"' +
       ' stroke-linecap="round" style="width:13px;height:13px;color:var(--text-muted);flex-shrink:0;">' +
       '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>' +
-      /* FIX-2: Dropdown tahun dengan rentang terbatas */
-      '<select id="filter-tahun" title="Filter berdasarkan tahun">' +
-      '<option value="">Semua Tahun</option>' + optionsTahun +
-      '</select>' +
-      /* Divider */
+      
+      /* Dropdown Tahun Custom (Menggantikan <select>) */
+      '<div class="custom-year-wrapper">' +
+        '<div id="filter-tahun-display" data-value="" title="Filter berdasarkan tahun">Semua Tahun <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:10px;height:10px;margin-left:2px;margin-top:1px;"><polyline points="6 9 12 15 18 9"/></svg></div>' +
+        '<div id="custom-year-dropdown" class="custom-dropdown">' + optionsTahunHTML + '</div>' +
+      '</div>' +
+      
       '<span class="bar-divider"></span>' +
-      /* 5.1: Wrapper relatif untuk input + custom dropdown */
+      
       '<div class="search-input-wrapper">' +
       '<input id="search-input"' +
       ' placeholder="Ketik nomor Perdirjen" autocomplete="off"/>' +
       '<div id="custom-search-dropdown" class="custom-dropdown"></div>' +
       '</div>';
 
-    /* 5.1: Isi dropdown kustom awal (semua tahun) */
+    /* Isi dropdown pencarian awal */
     refreshCustomDropdown('', '');
 
-    /* Event: Dropdown tahun berubah */
-    var selectEl = document.getElementById('filter-tahun');
-    if (selectEl) {
-      selectEl.addEventListener('change', function () {
-        var inputEl = document.getElementById('search-input');
+    var yearDisp   = document.getElementById('filter-tahun-display');
+    var yearDrop   = document.getElementById('custom-year-dropdown');
+    var inputEl    = document.getElementById('search-input');
+    var searchDrop = document.getElementById('custom-search-dropdown');
+
+    /* Event: Buka/Tutup Dropdown Tahun */
+    if (yearDisp && yearDrop) {
+      yearDisp.addEventListener('click', function (e) {
+        e.stopPropagation();
+        yearDrop.classList.toggle('is-open');
+        if (searchDrop) searchDrop.classList.remove('is-open');
+      });
+
+      /* Event: Pilih Tahun dari Dropdown Custom */
+      yearDrop.addEventListener('click', function (e) {
+        var item = e.target.closest('.year-item');
+        if (!item) return;
+        var val = item.getAttribute('data-year');
+        var text = val === '' ? 'Semua Tahun' : val;
+        
+        yearDisp.innerHTML = text + ' <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:10px;height:10px;margin-left:2px;margin-top:1px;"><polyline points="6 9 12 15 18 9"/></svg>';
+        yearDisp.setAttribute('data-value', val);
+        yearDrop.classList.remove('is-open');
+
+        /* Update dropdown pencarian utama */
         var textVal = inputEl ? inputEl.value : '';
-        refreshCustomDropdown(selectEl.value, textVal);
+        refreshCustomDropdown(val, textVal);
         if (inputEl) { inputEl.value = ''; inputEl.focus(); }
-        var dd = document.getElementById('custom-search-dropdown');
-        if (dd) dd.classList.remove('is-open');
       });
     }
 
-    /* Event: Input pencarian — tampilkan dropdown kustom */
-    var inputEl = document.getElementById('search-input');
-    var ddEl    = document.getElementById('custom-search-dropdown');
-
-    if (inputEl && ddEl) {
-
-      /* focus: tampilkan dropdown dengan filter saat ini */
+    if (inputEl && searchDrop) {
       inputEl.addEventListener('focus', function () {
-        var selEl = document.getElementById('filter-tahun');
-        refreshCustomDropdown(selEl ? selEl.value : '', inputEl.value.trim());
-        ddEl.classList.add('is-open');
+        var selVal = yearDisp ? yearDisp.getAttribute('data-value') : '';
+        refreshCustomDropdown(selVal, inputEl.value.trim());
+        searchDrop.classList.add('is-open');
+        if (yearDrop) yearDrop.classList.remove('is-open');
       });
 
-      /* input: perbarui dropdown saat user mengetik */
       inputEl.addEventListener('input', function () {
-        var selEl = document.getElementById('filter-tahun');
-        refreshCustomDropdown(selEl ? selEl.value : '', inputEl.value.trim());
-        ddEl.classList.add('is-open');
+        var selVal = yearDisp ? yearDisp.getAttribute('data-value') : '';
+        refreshCustomDropdown(selVal, inputEl.value.trim());
+        searchDrop.classList.add('is-open');
       });
 
-      /* Delegasi klik pada item dropdown */
-      ddEl.addEventListener('click', function (e) {
-        var item = e.target.closest('.custom-dropdown-item');
+      searchDrop.addEventListener('click', function (e) {
+        var item = e.target.closest('.custom-dropdown-item:not(.year-item)');
         if (!item) return;
         var val = item.getAttribute('data-value');
         if (!val) return;
         inputEl.value = val;
-        ddEl.classList.remove('is-open');
+        searchDrop.classList.remove('is-open');
         var targetId = resolveSearchInput(val);
         if (targetId) renderEgoNetwork(targetId);
       });
 
-      /* Enter: konfirmasi pencarian manual */
       inputEl.addEventListener('keydown', function (e) {
         if (e.key === 'Enter') {
-          ddEl.classList.remove('is-open');
+          searchDrop.classList.remove('is-open');
           var targetId = resolveSearchInput(inputEl.value.trim());
           if (targetId) {
             renderEgoNetwork(targetId);
@@ -509,21 +521,20 @@
             setTimeout(function () { inputEl.style.outline = ''; }, 1200);
           }
         }
-        /* Tutup dropdown dengan Escape */
         if (e.key === 'Escape') {
-          ddEl.classList.remove('is-open');
+          searchDrop.classList.remove('is-open');
         }
       });
     }
 
-    /* Tutup dropdown saat klik di luar area search bar */
+    /* Tutup semua dropdown saat klik di luar kotak pencarian */
     document.addEventListener('click', function (e) {
-      var ddEl2   = document.getElementById('custom-search-dropdown');
-      var inEl    = document.getElementById('search-input');
-      if (!ddEl2) return;
-      if (e.target === inEl) return;
-      if (ddEl2.contains(e.target)) return;
-      ddEl2.classList.remove('is-open');
+      if (searchDrop && !inputEl.contains(e.target) && !searchDrop.contains(e.target)) {
+        searchDrop.classList.remove('is-open');
+      }
+      if (yearDrop && !yearDisp.contains(e.target) && !yearDrop.contains(e.target)) {
+        yearDrop.classList.remove('is-open');
+      }
     });
   } // ── akhir buildSearchUI()
 

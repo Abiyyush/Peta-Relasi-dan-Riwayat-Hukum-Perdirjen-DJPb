@@ -352,7 +352,30 @@
       background: transparent;
     }
 
-    .map-search-bar input::placeholder { color: var(--text-muted); }
+  .map-search-bar input::placeholder { color: var(--text-muted); }
+
+    /* ─── CUSTOM YEAR DROPDOWN ──────────────────────────────────── */
+    .custom-year-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    #filter-tahun-display {
+      font-family: var(--font-body);
+      font-size: 11px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      white-space: nowrap;
+      user-select: none;
+    }
+    #filter-tahun-display:hover { color: var(--djpb-blue); }
+    #custom-year-dropdown { min-width: 110px; width: auto; }
+    
+    body.dark-mode #filter-tahun-display { color: var(--text-secondary); }
+    body.dark-mode #filter-tahun-display:hover { color: var(--djpb-sky); }
 
     /* ─── LEGEND ────────────────────────────────────────────────── */
     .legend {
@@ -987,7 +1010,7 @@
       #detail-panel { flex: 0 0 50%; border-left: none; border-top: 1.5px solid var(--border-strong); }
     }
 
-    /* Khusus untuk Layar Handphone (< 600px) */
+   /* Khusus untuk Layar Handphone (< 600px) */
     @media (max-width: 600px) {
       /* 1. Rapikan Header */
       .app-header { padding: 0 10px; gap: 8px; }
@@ -996,40 +1019,51 @@
       .header-subtitle, .header-badge.beta, .header-divider { display: none; }
       .toolbar-btn { width: 28px; height: 28px; }
 
-      /* 2. Rapikan Alat Peta & Pencarian (Satu baris, lebih mungil) */
+  /* 2. Rapikan Alat Peta & Pencarian (Proporsional & Dibatasi) */
       .map-toolbar {
         top: 10px; left: 10px; right: 10px;
-        flex-wrap: nowrap; /* Memaksa agar tetap satu baris */
+        flex-wrap: nowrap;
         gap: 4px;
       }
-      .map-tool-btn { width: 28px; height: 28px; }
+      .map-tool-btn { width: 28px; height: 28px; flex-shrink: 0; }
       .map-tool-btn svg { width: 12px; height: 12px; }
       .map-search-bar { 
-        flex: 1; /* Mengisi sisa ruang tanpa turun baris */
-        height: 28px; 
-        padding: 0 6px; 
-        gap: 4px;
+        flex: 1; height: 28px; padding: 0 6px; gap: 4px; overflow: hidden;
       }
-      .map-search-bar svg { width: 11px; height: 11px; }
-      .map-search-bar input { font-size: 11px; }
-      .map-search-bar select { max-width: 75px; font-size: 9.5px; padding-right: 0px;}
+      .map-search-bar svg { width: 11px; height: 11px; flex-shrink: 0; }
+      .map-search-bar input { font-size: 11px; width: 100%; min-width: 0; }
 
-      /* 3. Perkecil Legenda Relasi Secara Ekstrem */
+      /* Penyesuaian Custom Dropdown di Mobile (Tahun & Pencarian) */
+      #filter-tahun-display { font-size: 10px; max-width: 75px; overflow: hidden; text-overflow: ellipsis; }
+      
+      /* Batasi tinggi dropdown agar hanya memuat ~4 item (Scroll) & kurangi ruang kosong */
+      .custom-dropdown {
+        max-height: 140px !important; 
+        min-width: 160px !important;
+      }
+      #custom-year-dropdown { min-width: 90px !important; }
+      .custom-dropdown-item { padding: 8px 10px; font-size: 11px; }
+
+      /* 3. Perkecil Legenda Relasi (Sekitar 65% dari ukuran sebelumnya) */
       .legend {
         bottom: 10px; left: 10px;
         min-width: 130px;
         padding: 6px 8px;
+        transform: scale(0.65); /* Ini yang membuatnya menyusut proporsional */
+        transform-origin: bottom left; /* Menjaga agar tetap nempel di pojok kiri bawah */
       }
       .legend-title { font-size: 8px; margin-bottom: 4px; }
       .legend-label { font-size: 8.5px; }
       .legend-items { gap: 3px; }
-      .legend-line { width: 20px; } /* Memendekkan garis agar hemat tempat */
+      .legend-line { width: 20px; }
       .legend-item .toggle-switch { transform: scale(0.55) !important; margin-left: auto; }
 
       /* 4. Perkecil Status Bar (Node/Relasi/Zoom) */
       .map-statusbar { 
         bottom: 10px; right: 10px; 
         gap: 3px; 
+        transform: scale(0.7); /* Menyusutkan ukuran indikator */
+        transform-origin: bottom right; /* Menjaga agar tetap nempel di pojok kanan bawah */
       }
       .map-stat-chip { padding: 2px 4px; font-size: 8px; gap: 3px; }
       .map-stat-dot { width: 4px; height: 4px; }
@@ -1038,17 +1072,14 @@
       .panel-open-btn { top: 10px; right: 10px; width: 28px; height: 28px; }
 
       /* 6. Rapikan Pop-up Modal (Panduan & Referensi) */
-      .modal-box { 
-        margin: 20px; /* Memperbesar jarak dari tepi layar */
-      } 
+      .modal-box { margin: 20px; } 
       .modal-header, .modal-footer { padding: 12px 14px; }
       .modal-title { font-size: 11.5px; }
       .modal-subtitle { font-size: 9px; }
       
-      /* Penyesuaian khusus konten Panduan Penggunaan */
       #panduan-modal .modal-body {
         padding: 14px;
-        max-height: calc(100vh - 140px); /* Mencegah modal terpotong di bawah */
+        max-height: calc(100vh - 140px);
       }
       .panduan-section { margin-bottom: 14px; }
       .panduan-section-title { font-size: 8.5px; margin-bottom: 6px; }
@@ -1058,6 +1089,22 @@
       .inline-icon { width: 14px; height: 14px; }
       .inline-icon svg { width: 8px; height: 8px; }
       .panduan-chip { font-size: 9px; padding: 1px 5px; }
+
+      /* 7. Perkecil List Peraturan Aktif & Dekatkan ke Atas */
+      .active-filters {
+        top: 42px; /* Ditarik ke atas agar dekat dengan kotak pencarian (sebelumnya 56px) */
+        left: 10px;
+        gap: 3px;
+      }
+      .ego-filter-chip {
+        padding: 2px 5px 2px 7px;
+        font-size: 8.5px; /* Huruf dikecilkan */
+      }
+      .ego-filter-chip-remove {
+        width: 12px;
+        height: 12px;
+        font-size: 7px;
+      }
     }
 
     /* ─── FADE IN ANIMATION ─────────────────────────────────────── */
@@ -2540,7 +2587,7 @@
               <span class="inline-icon" style="background:#3182CE;border-color:#2B6CB0;">
                 <svg viewBox="0 0 24 24" fill="white" stroke="none"><circle cx="12" cy="12" r="9"/></svg>
               </span>
-              menandai sekumpulan Dasar Hukum (R-01) yang dikompresi. <strong>Klik Ganda</strong> pada kluster biru untuk membuka dan menampilkan semua node di dalamnya.
+              menandai sekumpulan Dasar Hukum yang dikompresi. <strong>Klik Ganda</strong> pada kluster biru untuk membuka dan menampilkan semua node di dalamnya.
             </span>
           </li>
           <li>
