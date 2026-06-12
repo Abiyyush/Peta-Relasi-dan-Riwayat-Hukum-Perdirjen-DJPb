@@ -1027,9 +1027,12 @@
       }
       .map-tool-btn { width: 28px; height: 28px; flex-shrink: 0; }
       .map-tool-btn svg { width: 12px; height: 12px; }
+      
+      /* HAPUS overflow:hidden di sini agar dropdown bisa turun ke bawah */
       .map-search-bar { 
-        flex: 1; height: 28px; padding: 0 6px; gap: 4px; overflow: hidden;
+        flex: 1; height: 28px; padding: 0 6px; gap: 4px; 
       }
+      
       .map-search-bar svg { width: 11px; height: 11px; flex-shrink: 0; }
       .map-search-bar input { font-size: 11px; width: 100%; min-width: 0; }
 
@@ -1049,8 +1052,9 @@
         bottom: 10px; left: 10px;
         min-width: 130px;
         padding: 6px 8px;
-        transform: scale(0.65); /* Ini yang membuatnya menyusut proporsional */
-        transform-origin: bottom left; /* Menjaga agar tetap nempel di pojok kiri bawah */
+        transform: scale(0.65); 
+        transform-origin: bottom left; 
+        animation: none !important; /* Mencegah animasi merusak efek scale() */
       }
       .legend-title { font-size: 8px; margin-bottom: 4px; }
       .legend-label { font-size: 8.5px; }
@@ -1062,8 +1066,9 @@
       .map-statusbar { 
         bottom: 10px; right: 10px; 
         gap: 3px; 
-        transform: scale(0.7); /* Menyusutkan ukuran indikator */
-        transform-origin: bottom right; /* Menjaga agar tetap nempel di pojok kanan bawah */
+        transform: scale(0.7); 
+        transform-origin: bottom right; 
+        animation: none !important; /* Mencegah animasi merusak efek scale() */
       }
       .map-stat-chip { padding: 2px 4px; font-size: 8px; gap: 3px; }
       .map-stat-dot { width: 4px; height: 4px; }
