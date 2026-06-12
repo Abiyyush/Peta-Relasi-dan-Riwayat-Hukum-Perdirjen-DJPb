@@ -1,7 +1,7 @@
 /**
  * ╔══════════════════════════════════════════════════════════════════════════╗
  * ║  MESIN JAVASCRIPT — Peta Relasi dan Riwayat Hukum Perdirjen DJPb       ║
- * ║  Versi : 8.0.0  (Panduan Penggunaan — Modal Onboarding)                ║
+ * ║  Versi : 8.0.1  (Perbaikan Tampilan Mobile)                            ║
  * ║  Tempel : Sebagai file djpb-engine.js, lalu panggil via <script src>   ║
  * ║           tepat sebelum </body> di index.html                           ║
  * ╚══════════════════════════════════════════════════════════════════════════╝
