@@ -989,40 +989,75 @@
 
     /* Khusus untuk Layar Handphone (< 600px) */
     @media (max-width: 600px) {
-      /* 1. Rapikan Header: Kecilkan teks & sembunyikan sub-judul agar tidak tumpang tindih */
+      /* 1. Rapikan Header */
       .app-header { padding: 0 10px; gap: 8px; }
       .header-logo-mark { width: 28px; height: 28px; }
       .header-title { font-size: 11.5px; line-height: 1.3; }
       .header-subtitle, .header-badge.beta, .header-divider { display: none; }
       .toolbar-btn { width: 28px; height: 28px; }
 
-      /* 2. Rapikan Alat Peta & Pencarian: Biarkan pencarian turun ke baris baru */
+      /* 2. Rapikan Alat Peta & Pencarian (Satu baris, lebih mungil) */
       .map-toolbar {
         top: 10px; left: 10px; right: 10px;
-        flex-wrap: wrap; 
+        flex-wrap: nowrap; /* Memaksa agar tetap satu baris */
+        gap: 4px;
       }
-      .map-search-bar { flex: 1 1 100%; } /* Kotak pencarian memenuhi lebar layar */
-      .map-search-bar select { max-width: 85px; font-size: 10px; }
+      .map-tool-btn { width: 28px; height: 28px; }
+      .map-tool-btn svg { width: 12px; height: 12px; }
+      .map-search-bar { 
+        flex: 1; /* Mengisi sisa ruang tanpa turun baris */
+        height: 28px; 
+        padding: 0 6px; 
+        gap: 4px;
+      }
+      .map-search-bar svg { width: 11px; height: 11px; }
+      .map-search-bar input { font-size: 11px; }
+      .map-search-bar select { max-width: 75px; font-size: 9.5px; padding-right: 0px;}
 
-      /* 3. Perkecil Legenda Relasi */
+      /* 3. Perkecil Legenda Relasi Secara Ekstrem */
       .legend {
         bottom: 10px; left: 10px;
-        min-width: 150px;
-        padding: 8px 10px;
+        min-width: 130px;
+        padding: 6px 8px;
       }
-      .legend-title { font-size: 8.5px; margin-bottom: 6px; }
-      .legend-label { font-size: 9.5px; }
-      .legend-items { gap: 4px; }
-      .legend-item .toggle-switch { transform: scale(0.6) !important; }
+      .legend-title { font-size: 8px; margin-bottom: 4px; }
+      .legend-label { font-size: 8.5px; }
+      .legend-items { gap: 3px; }
+      .legend-line { width: 20px; } /* Memendekkan garis agar hemat tempat */
+      .legend-item .toggle-switch { transform: scale(0.55) !important; margin-left: auto; }
 
-      /* 4. Perkecil Status Bar (Node/Relasi) */
-      .map-statusbar { bottom: 10px; right: 10px; gap: 4px; }
-      .map-stat-chip { padding: 3px 6px; font-size: 9px; }
-      /* Sembunyikan persentase zoom di HP agar tidak menabrak legenda */
-      .map-stat-chip:last-child { display: none; }
+      /* 4. Perkecil Status Bar (Node/Relasi/Zoom) */
+      .map-statusbar { 
+        bottom: 10px; right: 10px; 
+        gap: 3px; 
+      }
+      .map-stat-chip { padding: 2px 4px; font-size: 8px; gap: 3px; }
+      .map-stat-dot { width: 4px; height: 4px; }
 
       /* 5. Sesuaikan Tombol Buka Panel */
       .panel-open-btn { top: 10px; right: 10px; width: 28px; height: 28px; }
+
+      /* 6. Rapikan Pop-up Modal (Panduan & Referensi) */
+      .modal-box { 
+        margin: 20px; /* Memperbesar jarak dari tepi layar */
+      } 
+      .modal-header, .modal-footer { padding: 12px 14px; }
+      .modal-title { font-size: 11.5px; }
+      .modal-subtitle { font-size: 9px; }
+      
+      /* Penyesuaian khusus konten Panduan Penggunaan */
+      #panduan-modal .modal-body {
+        padding: 14px;
+        max-height: calc(100vh - 140px); /* Mencegah modal terpotong di bawah */
+      }
+      .panduan-section { margin-bottom: 14px; }
+      .panduan-section-title { font-size: 8.5px; margin-bottom: 6px; }
+      .panduan-list { gap: 6px; }
+      .panduan-list li { font-size: 10px; line-height: 1.4; gap: 6px; }
+      .panduan-list li::before { width: 5px; height: 5px; margin-top: 4px; }
+      .inline-icon { width: 14px; height: 14px; }
+      .inline-icon svg { width: 8px; height: 8px; }
+      .panduan-chip { font-size: 9px; padding: 1px 5px; }
     }
 
     /* ─── FADE IN ANIMATION ─────────────────────────────────────── */
