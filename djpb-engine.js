@@ -2011,10 +2011,10 @@
       });
     });
 
-    /* Sort: tahun descending, lalu penulisan ascending */
+    /* Sort: tahun descending, lalu penulisan ascending (Natural Sort/Sesuai Angka) */
     items.sort(function (a, b) {
       if (b.tahun !== a.tahun) return b.tahun - a.tahun;
-      return a.penulisan.localeCompare(b.penulisan, 'id');
+      return a.penulisan.localeCompare(b.penulisan, undefined, { numeric: true, sensitivity: 'base' });
     });
 
     /* Update badge jumlah */
