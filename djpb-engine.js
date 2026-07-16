@@ -1,10 +1,10 @@
 /**
- * ╔══════════════════════════════════════════════════════════════════════════╗
- * ║  MESIN JAVASCRIPT — Peta Relasi dan Riwayat Hukum Perdirjen DJPb       ║
- * ║  Versi : 8.0.1  (Perbaikan Tampilan Mobile)                            ║
- * ║  Tempel : Sebagai file djpb-engine.js, lalu panggil via <script src>   ║
- * ║           tepat sebelum </body> di index.html                           ║
- * ╚══════════════════════════════════════════════════════════════════════════╝
+ * ╔═════════════════════════════════════════════════════════════════════════════╗
+ * ║  MESIN JAVASCRIPT — Peta Relasi dan Riwayat Hukum Perdirjen Perbendaharaan  ║
+ * ║  Versi : 8.0.1  (Perbaikan Tampilan Mobile)                                 ║
+ * ║  Tempel : Sebagai file djpb-engine.js, lalu panggil via <script src>        ║
+ * ║           tepat sebelum </body> di index.html                               ║
+ * ╚═════════════════════════════════════════════════════════════════════════════╝
  *
  * ── FITUR BARU (v8.0.0) ───────────────────────────────────────────────────
  * PANDUAN-1: Modal Panduan Penggunaan (#panduan-modal).
